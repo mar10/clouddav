@@ -1,0 +1,9 @@
+# TODO: uncomment and supply a Google App Engine application instance
+# application: FIXME
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /.*
+  script: clouddav.py
