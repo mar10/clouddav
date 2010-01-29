@@ -49,12 +49,13 @@ class BTFSResource(DAVResource):
 
     def getContentType(self):
         if self.isCollection:
+            # TODO: should be None?
             return "httpd/unix-directory" 
         (mimetype, _mimeencoding) = mimetypes.guess_type(self.path, strict=False)
         logging.debug("Guess type of %s is %s", repr(self.path), mimetype)
         if mimetype == '' or mimetype is None:
             mimetype = 'application/octet-stream' 
-        mimetype = 'application/octet-stream'
+#        mimetype = 'application/octet-stream'
         return mimetype
 
     def getCreationDate(self):
