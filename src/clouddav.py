@@ -22,8 +22,8 @@ def real_main():
         "user_mapping": {},
         "verbose": 2,
         "enable_loggers": [],
-        "propsmanager": True,      # True: use property_manager.PropertyManager                    
-        "locksmanager": True,      # True: use lock_manager.LockManager                   
+        "propsmanager": False,      # True: use property_manager.PropertyManager                    
+        "locksmanager": False,      # True: use lock_manager.LockManager                   
         "domaincontroller": None,  # None: domain_controller.WsgiDAVDomainController(user_mapping)
         })
     app = WsgiDAVApp(config)
@@ -51,8 +51,5 @@ main = real_main
 
 if __name__ == "__main__":
     logging.info("__main__")
-    logging.getLogger().setLevel(logging.DEBUG)
-    from btfs import test
-    
-    test.test()
+#    logging.getLogger().setLevel(logging.DEBUG)
     main()

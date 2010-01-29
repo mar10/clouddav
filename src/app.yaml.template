@@ -1,9 +1,11 @@
-# TODO: uncomment and supply a Google App Engine application instance
-# application: FIXME
+# TODO: rename this file to 'app.yaml'
+#       enter a Google App Engine application instance for MY_APP_NAME
+
+application: MY_APP_NAME
 version: 1
 runtime: python
 api_version: 1
 
 handlers:
-- url: /.*
+- url: .*
   script: clouddav.py

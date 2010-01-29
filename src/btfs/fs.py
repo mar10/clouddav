@@ -1,3 +1,12 @@
+# -*- coding: iso-8859-1 -*-
+from btfs.model import Path
+import shutil
+
+# (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
+# Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+#
+# The original source for this module was written by Haoyu Bai (http://gaedav.google.com/).  
+
 import time
 import StringIO
 import logging
@@ -17,32 +26,45 @@ def initfs():
         mkdir('/')
     return
 
-def getdir(s):
-    p = Dir.retrieve(s)
+def _getresource(s):
+    p = Path.retrieve(s)
+    assert p is None or type(p) in (Dir, File)
     return p
 
+def getdir(s):
+#    p = Dir.retrieve(s)
+    p = _getresource(s)
+    if type(p) is Dir:
+        return p
+    return None
+
 def getfile(s):
-    f = File.retrieve(s)
-    return f
+#    p = File.retrieve(s)
+    p = _getresource(s)
+    if type(p) is File:
+        return p
+    return None
 
 def isdir(s):
     p = getdir(s)
-    result = p is not None
-    return result
+    return p is not None
 
 def isfile(s):
     p = getfile(s)
     return p is not None
 
 def exists(s):
-    return isdir(s) or isfile(s)
+    # TODO: Path.retrieve(s)?
+#    return isdir(s) or isfile(s)
+    return _getresource(s) is not None
 
 def stat(s):
  
     def epoch(tm):
         return time.mktime(tm.utctimetuple())
-
-    p = getdir(s) or getfile(s)
+    # TODO: inefficient:
+#    p = getdir(s) or getfile(s)
+    p = _getresource(s)
     size = p.size
     atime = epoch(p.modify_time)
     mtime = atime
@@ -101,7 +123,26 @@ def mkdir(s):
 
 def rmdir(s):
     p = getdir(s)
-    p.delete()
+    p.delete(recursive=False)
+    return
+
+def rmtree(s):
+    p = getdir(s)
+    p.delete(recursive=True)
+    return
+
+def copyfile(s, d):
+    # raise, if not exists:
+    sio = btopen(s, 'rb')
+    # overwrite destination, if exists:
+    dio = btopen(d, 'wb')
+    while True:
+        buf = sio.read(8*1024)
+        if not buf:
+            break
+        dio.write(buf)
+    dio.close()
+    sio.close()
     return
 
 def unlink(s):
@@ -110,21 +151,25 @@ def unlink(s):
     return
 
 def btopen(s, mode='r'):
-    """
-    Open the file (eg. return a BtIO object)
-    """
+    """Open the file (eg. return a BtIO object)"""
     f = getfile(s)
     if f is None:
+        # Create targtet file, but only in write mode
+        if not 'w' in mode:
+            raise ValueError("source not found %r" % s)
         f = File.new(path=s)
     io = BtIO(f, mode)
     return io
 
 def listdir(s):
     p = getdir(s)
-    path_str = [c.basename(c.path).encode('utf-8') for c in p.get_contents()]
+    path_str = [c.basename(c.path).encode('utf-8') for c in p.get_content()]
     return path_str
 
 
+#===============================================================================
+# BtIO
+#===============================================================================
 class BtIO(StringIO.StringIO):
     """
     Bigtable file IO object
