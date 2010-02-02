@@ -1071,6 +1071,7 @@ class DAVProvider(object):
         
 
     def setLockManager(self, lockManager):
+        assert hasattr(lockManager, "checkWritePermission"), "Must be compatible with wsgidav.lock_manager.LockManager"
 #        assert isinstance(lockManager, LockManager)
         self.lockManager = lockManager
 

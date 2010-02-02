@@ -44,6 +44,7 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 from fs_dav_provider import FilesystemProvider
 from wsgidav.dir_browser import WsgiDavDirBrowser
 from wsgidav.dav_provider import DAVProvider
+from wsgidav.lock_storage import LockStorageDict
 import time
 import sys
 import threading
@@ -67,7 +68,7 @@ DEFAULT_CONFIG = {
     "host": "localhost",
     "port": 8080, 
     "ext_servers": [
-#                   "paste", 
+                   "paste", 
 #                   "cherrypy",
 #                   "wsgiref",
                    "wsgidav",
@@ -126,13 +127,15 @@ class WsgiDAVApp(object):
         response_trailer = config.get("response_trailer", "")
         self._verbose = config.get("verbose", 2)
 
-        locksManager = config.get("locksmanager") 
-        if not locksManager:
-            # Normalize False, 0 to None
-            locksManager = None
-        elif locksManager is True:
-            locksManager = LockManager()
+        lockStorage = config.get("locksmanager") 
+        if lockStorage is True:
+            lockStorage = LockStorageDict()
             
+        if not lockStorage:
+            locksManager = None
+        else:
+            locksManager = LockManager(lockStorage)
+
         propsManager = config.get("propsmanager")     
         if not propsManager:
             # Normalize False, 0 to None
@@ -183,8 +186,8 @@ class WsgiDAVApp(object):
             
 
         if self._verbose >= 2:
-            print "Using lock manager: %s" % locksManager
-            print "Using property manager: %s" % propsManager
+            print "Using lock manager: %r" % locksManager
+            print "Using property manager: %r" % propsManager
             print "Using domain controller: %s" % domainController
             print "Registered DAV providers:"
             for share, provider in self.providerMap.items():
