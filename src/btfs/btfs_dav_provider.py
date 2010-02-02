@@ -5,8 +5,7 @@
 
 """
 Implementation of a WsgiDAV provider that implements a virtual file system based
-on Google's Big Table. 
-
+on Google's Big Table.
 """
 import os
 
@@ -24,7 +23,7 @@ from wsgidav import util
 
 __docformat__ = "reStructuredText en"
 
-_logger = util.getModuleLogger(__name__)
+#_logger = util.getModuleLogger(__name__)
 BUFFER_SIZE = 8192
 
 #===============================================================================
@@ -101,9 +100,9 @@ class BTFSResource(DAVResource):
 #            assert isinstance(name, unicode)
             # Skip non files (links and mount points)
             fp = os.path.join(self.path, name)
-            if not fs.isdir(fp) and not fs.isfile(fp):
-                _logger.debug("Skipping non-file %s" % fp)
-                continue
+#            if not fs.isdir(fp) and not fs.isfile(fp):
+#                _logger.debug("Skipping non-file %s" % fp)
+#                continue
 #            name = name.encode("utf8")
             nameList.append(name)
         return nameList
@@ -288,7 +287,7 @@ class BTFSResourceProvider(DAVProvider):
 
     def getResourceInst(self, path, environ):
         self._count_getResourceInst += 1
-        _logger.info("getResourceInst('%s')" % path)
+        logging.debug("getResourceInst('%s')" % path)
         try:
             return BTFSResource(self, path, environ)
         except:

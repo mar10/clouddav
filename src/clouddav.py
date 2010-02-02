@@ -7,6 +7,7 @@ import logging
 from wsgidav.wsgidav_app import WsgiDAVApp, DEFAULT_CONFIG
 #from wsgidav.samples.virtual_dav_provider import VirtualResourceProvider
 from btfs.btfs_dav_provider import BTFSResourceProvider
+from btfs.memcache_lock_storage import LockStorageMemcache
 #from wsgidav.version import __version__
 
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -15,6 +16,7 @@ def real_main():
     logging.info("real_main")
 #    provider = VirtualResourceProvider()
     provider = BTFSResourceProvider()
+    lockstorage = LockStorageMemcache()
 
     config = DEFAULT_CONFIG.copy()
     config.update({
@@ -23,7 +25,7 @@ def real_main():
         "verbose": 2,
         "enable_loggers": [],
         "propsmanager": False,      # True: use property_manager.PropertyManager                    
-        "locksmanager": False,      # True: use lock_manager.LockManager                   
+        "locksmanager": lockstorage,      # True: use lock_storage.LockStorageDict                   
         "domaincontroller": None,  # None: domain_controller.WsgiDAVDomainController(user_mapping)
         })
     app = WsgiDAVApp(config)
@@ -46,8 +48,15 @@ def profile_main():
     logging.info("Profile data:\n%s", stream.getvalue())
 
 
-#main = profile_main
-main = real_main
+#===============================================================================
+# main()
+# http://code.google.com/intl/en/appengine/docs/python/runtime.html#App_Caching
+# "App caching provides a significant benefit in response time. 
+#  We recommend that all applications use a main() routine, ..."
+#===============================================================================
+main = profile_main
+
+
 
 if __name__ == "__main__":
     logging.info("__main__")

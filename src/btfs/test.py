@@ -1,12 +1,13 @@
 # -*- coding: iso-8859-1 -*-
+from btfs.memcache_lock_storage import LockStorageMemcache
+from wsgidav.lock_manager import LockManager, lockString
 
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 
 """
-Implementation of a WsgiDAV provider that implements a virtual filesystem based
-on Googles Big Table. 
-
+Implementation of a WsgiDAV provider that implements a virtual file system based
+on Googles datastore (Bigtable). 
 """
 import logging
 from btfs.btfs_dav_provider import BTFSResourceProvider
@@ -43,6 +44,8 @@ def test():
   
     # Test providers 
     provider = BTFSResourceProvider()
+    lockman = LockManager(LockStorageMemcache())
+    provider.setLockManager(lockman)
     environ = {}
     
     resRoot = provider.getResourceInst("/", environ)
@@ -71,7 +74,21 @@ def test():
     f.close()
     
     print "*** provider tests passed ***"
+    
+    lock = provider.lockManager.acquire("/folder1", 
+                                        "write", "exclusive", "infinity", 
+                                        "test_owner", timeout=100, 
+                                        principal="martin", tokenList=[])
+    assert lock["root"] == "/folder1"
+    lock = provider.lockManager.getLock(lock["token"])
+    print lockString(lock)
+    assert lock["root"] == "/folder1"
 
+    locklist = provider.lockManager.getIndirectUrlLockList("/folder1/file2.txt")
+    print locklist
+    assert len(locklist) == 1
+    
+    print "*** lock tests passed ***"
 
 
 def profile_test():
