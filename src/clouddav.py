@@ -60,5 +60,5 @@ main = profile_main
 
 if __name__ == "__main__":
     logging.info("__main__")
-#    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
     main()
