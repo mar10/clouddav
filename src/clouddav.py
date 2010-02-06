@@ -13,7 +13,7 @@ from btfs.memcache_lock_storage import LockStorageMemcache
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 def real_main():
-    logging.info("real_main")
+    logging.debug("real_main")
 #    provider = VirtualResourceProvider()
     provider = BTFSResourceProvider()
     lockstorage = LockStorageMemcache()
@@ -59,6 +59,6 @@ main = profile_main
 
 
 if __name__ == "__main__":
-    logging.info("__main__")
+    logging.debug("couddav.__main__")
     logging.getLogger().setLevel(logging.DEBUG)
     main()

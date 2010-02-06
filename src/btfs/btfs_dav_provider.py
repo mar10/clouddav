@@ -40,7 +40,7 @@ class BTFSResource(DAVResource):
         if not self.pathEntity:
             raise ValueError("Path not found: %r" % path)
         isCollection = ( type(self.pathEntity) is Dir )
-        logging.info("BTFSResource(%r): %r" % (path, isCollection))
+        logging.debug("BTFSResource(%r): %r" % (path, isCollection))
         super(BTFSResource, self).__init__(provider, path, isCollection, environ)
 #        self.statresults = fs.stat(self.path)
         self.statresults = fs.stat(self.pathEntity)

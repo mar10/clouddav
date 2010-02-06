@@ -21,11 +21,13 @@ class AdminHandler(webapp.RequestHandler):
         # Handle admin commands 
         if qs == "run_tests":
             from btfs.test import test
-            return test()
+            test()
+            return
         elif qs == "clear_cache":
             logging.warning("clear_cache: memcache.flush_all()")
             memcache.flush_all()
-            return "Memcache deleted! <a href='?'>Back</a>"
+            self.response.out.write("Memcache deleted! <a href='?'>Back</a>")
+            return
         elif qs == "clear_datastore":
             logging.warning("clear_datastore: fs.rmtree('/')")
             from btfs import fs
@@ -34,7 +36,8 @@ class AdminHandler(webapp.RequestHandler):
 #            fs.getdir("/").delete(recursive=True)
             memcache.flush_all()
             fs.initfs()
-            return "Removed '/'. <a href='?'>Back</a>"
+            self.response.out.write("Removed '/'. <a href='?'>Back</a>")
+            return
         elif qs != "":
             raise NotImplementedError("Invalid command: %s" % qs)
         # Show admin page

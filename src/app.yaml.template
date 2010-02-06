@@ -7,5 +7,9 @@ runtime: python
 api_version: 1
 
 handlers:
+- url: /_admin
+  script: admin_handler.py
+  login: admin
+
 - url: .*
   script: clouddav.py

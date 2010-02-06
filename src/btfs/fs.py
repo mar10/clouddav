@@ -42,9 +42,9 @@ def _getresource(path):
     Return None, if path does not exist.
     """
     if type(path) in (Dir, File):
-        logging.info("_getresource(%r): request cache HIT" % path.path)
+        logging.debug("_getresource(%r): request cache HIT" % path.path)
         return path
-    logging.info("_getresource(%r)" % path)
+#    logging.info("_getresource(%r)" % path)
     p = Path.retrieve(path)
     assert p is None or type(p) in (Dir, File)
     return p
