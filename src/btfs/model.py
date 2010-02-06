@@ -34,14 +34,19 @@ class Path(polymodel.PolyModel):
     size = db.IntegerProperty(required=True, default=0) # cache the size of content, 0 for dir
     create_time = db.DateTimeProperty(required=True, auto_now_add = True)
     modify_time = db.DateTimeProperty(required=True, auto_now = True)
+
     cache = cached_resource
      
     def put(self):
+        logging.debug("Path.put(%r)" % (self.path))
         db.Model.put(self)
         self.cache.set(self.path, self)
         return 
 
     def delete(self):
+        logging.debug("Path.delete(%r)" % (self.path))
+        if self.path == "/":
+            raise RuntimeError("Though shalt not delete root")
         self.cache.delete(self.path)
         return db.Model.delete(self)
 
@@ -98,6 +103,7 @@ class Path(polymodel.PolyModel):
         logging.debug("Path.retrieve(%s, %r)" % (cls.__name__, path))
         assert cls is Path
         path = cls.normalize(path)
+        assert path.startswith("/")
         result = cls.cache.get(path)
         if result:
             return result
