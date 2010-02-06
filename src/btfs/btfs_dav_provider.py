@@ -1,4 +1,5 @@
 # -*- coding: iso-8859-1 -*-
+from btfs.model import Path, Dir, File
 
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
@@ -35,16 +36,21 @@ class BTFSResource(DAVResource):
                        ]
 
     def __init__(self, provider, path, environ):
-        if not fs.exists(path):
-            raise ValueError()
-        isCollection = fs.isdir(path)
+        self.pathEntity = Path.retrieve(path)
+        if not self.pathEntity:
+            raise ValueError("Path not found: %r" % path)
+        isCollection = ( type(self.pathEntity) is Dir )
+        logging.info("BTFSResource(%r): %r" % (path, isCollection))
         super(BTFSResource, self).__init__(provider, path, isCollection, environ)
-        self.statresults = fs.stat(self.path)
+#        self.statresults = fs.stat(self.path)
+        self.statresults = fs.stat(self.pathEntity)
+        
 
     def getContentLength(self):
         if self.isCollection:
             return None
-        return self.statresults.st_size    
+        return self.statresults.st_size
+
 
     def getContentType(self):
         if self.isCollection:
@@ -95,7 +101,7 @@ class BTFSResource(DAVResource):
         nameList = []
         # self._filePath is unicode, so os.listdir returns unicode as well
 #        assert isinstance(self._filePath, unicode) 
-        for name in fs.listdir(self.path):
+        for name in fs.listdir(self.pathEntity):
             # TODO: deal with encoding?
 #            assert isinstance(name, unicode)
             # Skip non files (links and mount points)
@@ -148,7 +154,8 @@ class BTFSResource(DAVResource):
         See DAVResource.getContent()
         """
         assert not self.isCollection
-        return fs.btopen(self.path, "rb")
+#        return fs.btopen(self.path, "rb")
+        return fs.btopen(self.pathEntity, "rb")
    
 
     def beginWrite(self, contentType=None):
@@ -157,7 +164,8 @@ class BTFSResource(DAVResource):
         See DAVResource.beginWrite()
         """
         assert not self.isCollection
-        return fs.btopen(self.path, "wb")
+#        return fs.btopen(self.path, "wb")
+        return fs.btopen(self.pathEntity, "wb")
 
     
     def delete(self):
@@ -166,9 +174,11 @@ class BTFSResource(DAVResource):
         See DAVResource.delete()
         """
         if self.isCollection:
-            fs.rmtree(self.path)
+#            fs.rmtree(self.path)
+            fs.rmtree(self.pathEntity)
         else:
-            fs.unlink(self.path)
+#            fs.unlink(self.path)
+            fs.unlink(self.pathEntity)
         self.removeAllProperties(True)
         self.removeAllLocks(True)
             
@@ -182,7 +192,8 @@ class BTFSResource(DAVResource):
                 fs.mkdir(destPath)
         else:
             # Copy file (overwrite, if exists)
-            fs.copyfile(self.path, destPath)
+#            fs.copyfile(self.path, destPath)
+            fs.copyfile(self.pathEntity, destPath)
 #            shutil.copy2(self._filePath, fpDest)
         # (Live properties are copied by copy2 or copystat)
         # Copy dead properties

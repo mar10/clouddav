@@ -30,9 +30,11 @@ _logger = util.getModuleLogger(__name__)
 
 __docformat__ = "reStructuredText"
 
+
 #===============================================================================
 # LockStorageMemcache
 #===============================================================================
+
 class LockStorageMemcache(object):
     """
     An in-memory lock manager implementation using a Google's Memcache.

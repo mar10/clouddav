@@ -1,6 +1,6 @@
 # -*- coding: iso-8859-1 -*-
-from btfs.model import Path
-import shutil
+import logging
+
 
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
@@ -9,9 +9,9 @@ import shutil
 
 import time
 import StringIO
-import logging
-from model import Dir, File
-
+#import logging
+from model import Dir, File, Path
+#from btfs import memcash
 
 """
 File system operations.
@@ -22,24 +22,40 @@ def initfs():
     Make sure fs already inited.
     (eg. there's a '/' in db).
     """
+    logging.debug("fs.initfs")
     if not isdir('/'):
+        logging.info("fs.initfs: mkdir")
         mkdir('/')
     return
 
-def _getresource(s):
-    p = Path.retrieve(s)
+#@memcash.cache(ttl=10)  # cache function result for 10 seconds
+def _getresource(path):
+    """Return a model.Dir or model.File object for `path`.
+    
+    `path` may be an existing Dir/File entity. 
+    Since _getresource is called by most other functions in the `fs` module, 
+    this allows the DAV provider to pass a cached resource, thus implementing 
+    a simple per-request caching, like in::
+    
+        statresults = fs.stat(self.pathEntity)
+    
+    Return None, if path does not exist.
+    """
+    if type(path) in (Dir, File):
+        logging.info("_getresource(%r): request cache HIT" % path.path)
+        return path
+    logging.info("_getresource(%r)" % path)
+    p = Path.retrieve(path)
     assert p is None or type(p) in (Dir, File)
     return p
 
 def getdir(s):
-#    p = Dir.retrieve(s)
     p = _getresource(s)
     if type(p) is Dir:
         return p
     return None
 
 def getfile(s):
-#    p = File.retrieve(s)
     p = _getresource(s)
     if type(p) is File:
         return p
@@ -54,16 +70,12 @@ def isfile(s):
     return p is not None
 
 def exists(s):
-    # TODO: Path.retrieve(s)?
-#    return isdir(s) or isfile(s)
     return _getresource(s) is not None
 
 def stat(s):
  
     def epoch(tm):
         return time.mktime(tm.utctimetuple())
-    # TODO: inefficient:
-#    p = getdir(s) or getfile(s)
     p = _getresource(s)
     size = p.size
     atime = epoch(p.modify_time)
