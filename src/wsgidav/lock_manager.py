@@ -2,7 +2,7 @@
 # Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
-Implements the `LockManager` object that implements the locking functionality.
+Implements the `LockManager` object that provides the locking functionality.
 
 The LockManager requires a LockStorage object to implement persistence.  
 Two alternative lock storage classes are defined in the lock_storage module:
@@ -69,7 +69,7 @@ def normalizeLockRoot(path):
 
 
 def isLockExpired(lock):
-    expire = int(lock["expire"])
+    expire = float(lock["expire"])
     return expire >= 0 and expire < time.time()
 
 
@@ -102,7 +102,7 @@ def validateLock(lock):
     assert lock["depth"] in ("0", "infinity")
     assert type(lock["owner"]) is str
     # raises TypeError:
-    timeout = int(lock["timeout"])
+    timeout = float(lock["timeout"])
     assert timeout > 0 or timeout == -1, "timeout must be positive or -1"
     assert type(lock["principal"]) is str
     if "token" in lock:
