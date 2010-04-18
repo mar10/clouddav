@@ -20,12 +20,15 @@ File system operations.
 def initfs():
     """
     Make sure fs already inited.
-    (eg. there's a '/' in db).
+    (e.g. there's a '/' and '/dav' collection in db).
     """
     logging.debug("fs.initfs")
     if not isdir('/'):
-        logging.info("fs.initfs: mkdir")
+        logging.info("fs.initfs: mkdir '/'")
         mkdir('/')
+    if not isdir('/dav'):
+        logging.info("fs.initfs: mkdir '/dav'")
+        mkdir('/dav')
     return
 
 #@memcash.cache(ttl=10)  # cache function result for 10 seconds
