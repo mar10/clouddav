@@ -24,13 +24,13 @@ handlers:
 - url: /_admin
   script: admin_handler.py
   login: admin
-  secure: always
+  secure: optional
 
 # User administration
 - url: /auth/.*
   script: auth.py
   login: admin
-  secure: always
+  secure: optional
 
 # All other URLs are handled by WsgiDAV
 #   'secure: always' to force HTTPS, because we can only use Basic Authentication
@@ -39,4 +39,5 @@ handlers:
 #     this redirections.
 - url: .*
   script: clouddav.py
-  secure: optional
+  secure: always
+  

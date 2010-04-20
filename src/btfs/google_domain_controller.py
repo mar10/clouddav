@@ -9,6 +9,7 @@ Credentials are verified by applying this rules:
 1. If '*' is in the list of configured users allow anonymous access. 
 2. If the current request was made by an authenticated user with 
    admin permissions for this GAE application: grant write access.
+   Note: this is not reliable, since a WebDAV client may not be recognized.
 3. If the user name that is passed with the request is not configured in the 
    'User Administration' page of this CloudDAV application: deny access.
 4. Use Google's ClientLogin API to verify the the password.
@@ -171,6 +172,7 @@ class GoogleDomainController(object):
 
         # If current user is logged in to Google Apps and has 'admin'
         # permission, allow access  
+        # Note: this is not reliable, since a WebDAV client may not be recognized.
         google_user = users.get_current_user()
         logging.debug("User %s is googleapp user %s" % (username, google_user))
         if users.is_current_user_admin():
@@ -179,7 +181,7 @@ class GoogleDomainController(object):
             return True
 
         # Check if user name that was passed with the request is in the list 
-        # of allowed accounts
+        # of allowed accounts        
         auth_user = findAuthUser(username)
         if not auth_user:
             logging.info("User %s is not configured to have access" 
