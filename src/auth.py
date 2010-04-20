@@ -9,12 +9,21 @@ from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
+import logging
 
 class AuthorizedUser(db.Model):
     """Represents authorized users in the datastore."""
     user = db.UserProperty()
     canWrite = db.BooleanProperty(default=True)
 
+
+def findAuthUser(email):
+    """Return AuthorizedUser for `email` or None if not found."""
+    user = users.User(email)
+    auth_user =  AuthorizedUser.gql("where user = :1", user).get()
+    logging.debug("findAuthUser(%r) = %s" % (email, auth_user))
+    return auth_user
+    
 
 class AuthorizedRequestHandler(webapp.RequestHandler):
     """Authenticate users against a stored list of authorized users.

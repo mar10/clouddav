@@ -1,2 +1,5 @@
 glob:*.pyc
 glob:src/app.yaml
+
+syntax: regexp
+^upload\.bat$

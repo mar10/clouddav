@@ -138,19 +138,11 @@ class GoogleDomainController(object):
         available for general access."""
         logging.debug("requireAuthentication(%r)" 
                       % (realmname, ))
-        headers = [ "%s: %r" % e for e in environ.items() ]
-        logging.debug("headers:\n\t" + "\n\t".join(headers))
-        # Allow anonymous OPTIONS requests at root-level 
-#        if environ["REQUEST_METHOD"] in ("OPTIONS", "PROPFIND") and environ["PATH_INFO"] in ("/", "*"):
-#        if environ["REQUEST_METHOD"] == "OPTIONS" and environ["PATH_INFO"] in ("/", "*"):
-#            logging.debug("Top-level OPTIONS granted")
-#            return False
-        # If '*' is in the list of allowed accounts, everyone is accepted
+        # If '*' is in the list of allowed accounts, allow anonymous access
         if findAuthUser("*"):
             logging.debug("Granting access to everyone (*)")
             return False
         return True
-
     
     def isRealmUser(self, realmname, username, environ):
         """Returns True if this username is valid for the realm, False otherwise.
@@ -174,8 +166,8 @@ class GoogleDomainController(object):
         """
         logging.debug("authDomainUser(%r, %r, %r)" 
                       % (realmname, username, "***"))
-        headers = [ "%s: %r" % e for e in environ.items() ]
-        logging.debug("headers:\n\t" + "\n\t".join(headers))
+#        headers = [ "%s: %r" % e for e in environ.items() ]
+#        logging.debug("headers:\n\t" + "\n\t".join(headers))
 
         # If current user is logged in to Google Apps and has 'admin'
         # permission, allow access  
@@ -188,8 +180,6 @@ class GoogleDomainController(object):
 
         # Check if user name that was passed with the request is in the list 
         # of allowed accounts
-#        uo = users.User(username)
-#        auth_user = AuthorizedUser.gql("where user = :1", uo).get()
         auth_user = findAuthUser(username)
         if not auth_user:
             logging.info("User %s is not configured to have access" 

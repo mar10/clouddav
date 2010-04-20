@@ -6,6 +6,19 @@ version: 1
 runtime: python
 api_version: 1
 
+
+# Custom administration console pages
+
+admin_console:
+  pages:
+  - name: CloudDAV System Info
+    url: /_admin
+  - name: CloudDAV User Administration
+    url: /auth/users
+
+
+# Request handlers
+
 handlers:
 # Display Admin page at /_admin
 - url: /_admin
@@ -19,14 +32,11 @@ handlers:
   login: admin
   secure: always
 
+# All other URLs are handled by WsgiDAV
+#   'secure: always' to force HTTPS, because we can only use Basic Authentication
+#     This will generate '302 Redirect' when trying to access http:// URLs
+#     Windows XP (SP3) Mini-Redirector does not accept 'http://' URLs but follows 
+#     this redirections.
 - url: .*
   script: clouddav.py
   secure: optional
-
-# Custom administration console pages
-admin_console:
-  pages:
-  - name: CloudDAV System Info
-    url: /_admin
-  - name: CloudDAV User Administration
-    url: /auth/users
