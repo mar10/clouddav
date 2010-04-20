@@ -7,9 +7,26 @@ runtime: python
 api_version: 1
 
 handlers:
+# Display Admin page at /_admin
 - url: /_admin
   script: admin_handler.py
   login: admin
+  secure: always
+
+# User administration
+- url: /auth/.*
+  script: auth.py
+  login: admin
+  secure: always
 
 - url: .*
   script: clouddav.py
+  secure: optional
+
+# Custom administration console pages
+admin_console:
+  pages:
+  - name: CloudDAV System Info
+    url: /_admin
+  - name: CloudDAV User Administration
+    url: /auth/users
