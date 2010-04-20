@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+  <head>
+    <title>Authorized CloudDAV Users</title>
+  </head>
+
+  <body>
+    <h2>Authorized CloudDAV Users</h2>
+    <p>
+        The following users are granted access to this CloudDAV drive.<br>
+        <strong>Note:</strong> names/email addresses are case sensitive!
+    </p>
+    <ul>
+        {% for auth_user in authorized_users %}
+        <li>'{{ auth_user.user.nickname }}' (email: {{ auth_user.user.email }}) - 
+		    {% if auth_user.canWrite %}
+                <b>Read/Write access</b>
+   	        {% else %}
+    	        Read access
+		    {% endif %}
+            - <a href="/auth/userdelete?email={{ auth_user.user.email }}">[Delete]</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <form action="/auth/useradd" method="post">
+        <div><input type="text" name="email" id="email"/> (Email Address)</div>
+        <div><input type="submit" value="Add User"/></div>
+    </form>
+  </body>
+</html>
