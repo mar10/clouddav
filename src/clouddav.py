@@ -5,28 +5,35 @@
 
 import logging 
 from wsgidav.wsgidav_app import WsgiDAVApp, DEFAULT_CONFIG
-#from wsgidav.samples.virtual_dav_provider import VirtualResourceProvider
 from btfs.btfs_dav_provider import BTFSResourceProvider
 from btfs.memcache_lock_storage import LockStorageMemcache
+from btfs.google_domain_controller import GoogleDomainController
 #from wsgidav.version import __version__
 
 from google.appengine.ext.webapp.util import run_wsgi_app
+#import os
 
 def real_main():
     logging.debug("real_main")
-#    provider = VirtualResourceProvider()
     provider = BTFSResourceProvider()
     lockstorage = LockStorageMemcache()
+    domainController = GoogleDomainController()
 
     config = DEFAULT_CONFIG.copy()
     config.update({
         "provider_mapping": {"/": provider},
-        "user_mapping": {},
         "verbose": 2,
         "enable_loggers": [],
-        "propsmanager": False,      # True: use property_manager.PropertyManager                    
-        "locksmanager": lockstorage,      # True: use lock_storage.LockStorageDict                   
-        "domaincontroller": None,  # None: domain_controller.WsgiDAVDomainController(user_mapping)
+        "propsmanager": False,                    
+        "locksmanager": lockstorage,
+
+        # Use Basic Authentication and don't fall back to Digest Authentication,
+        # because our domain controller doesn't have no access to the user's 
+        # passwords.
+        "acceptbasic": True,      
+        "acceptdigest": False,    
+        "defaultdigest": False,    
+        "domaincontroller": domainController,
         })
     app = WsgiDAVApp(config)
     run_wsgi_app(app)
@@ -59,6 +66,6 @@ main = profile_main
 
 
 if __name__ == "__main__":
-    logging.debug("couddav.__main__")
+    logging.debug("clouddav.__main__")
     logging.getLogger().setLevel(logging.DEBUG)
     main()
