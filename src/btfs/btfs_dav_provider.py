@@ -86,32 +86,22 @@ class BTFSResource(DAVResource):
     def supportRanges(self):
         return True
     
-    def getMemberNames(self):
-        """Return list of (direct) collection member names (UTF-8 byte strings).
-        
-        See DAVResource.getMemberNames()
-        """
-        # On Windows NT/2k/XP and Unix, if path is a Unicode object, the result 
-        # will be a list of Unicode objects. 
-        # Undecodable filenames will still be returned as string objects    
-        # If we don't request unicode, for example Vista may return a '?' 
-        # instead of a special character. The name would then be unusable to
-        # build a distinct URL that references this resource.
 
-        nameList = []
-        # self._filePath is unicode, so os.listdir returns unicode as well
-#        assert isinstance(self._filePath, unicode) 
+    def getMemberList(self):
+        """Return list of (direct) collection members (DAVResource or derived).
+        
+        See DAVResource.getMemberList()
+        """
+        memberList = []
         for name in fs.listdir(self.pathEntity):
-            # TODO: deal with encoding?
-#            assert isinstance(name, unicode)
-            # Skip non files (links and mount points)
-            fp = os.path.join(self.path, name)
-#            if not fs.isdir(fp) and not fs.isfile(fp):
-#                _logger.debug("Skipping non-file %s" % fp)
-#                continue
+            # TODO: required?:
 #            name = name.encode("utf8")
-            nameList.append(name)
-        return nameList
+            res = BTFSResource(self.provider, 
+                               util.joinUri(self.path, name), 
+                               self.environ)
+            memberList.append(res)
+        return memberList
+
 
 #    def handleDelete(self):
 #        raise DAVError(HTTP_FORBIDDEN)
