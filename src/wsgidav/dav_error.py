@@ -1,5 +1,5 @@
-# (c) 2009 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
-# Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
+# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 Implements a DAVError class that is used to signal WebDAV and HTTP errors. 
@@ -12,6 +12,7 @@ import sys
 import xml_tools
 ## Trick PyDev to do intellisense and don't produce warnings:
 from xml_tools import etree #@UnusedImport
+from wsgidav.version import __version__
 if False: from xml.etree import ElementTree as etree     #@Reimport @UnresolvedImport
 
 __docformat__ = "reStructuredText"
@@ -213,15 +214,20 @@ class DAVError(Exception):
         # Else return as HTML 
         status = getHttpStatusString(self)
         html = []
+        html.append("<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01//EN' 'http://www.w3.org/TR/html4/strict.dtd'>");
         html.append("<html><head>") 
+        html.append("  <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>")
         html.append("  <title>%s</title>" % status) 
         html.append("</head><body>") 
         html.append("  <h1>%s</h1>" % status) 
         html.append("  <p>%s</p>" % cgi.escape(self.getUserInfo()))         
-        html.append("  <hr>")
-        html.append("  <p>%s</p>" % cgi.escape(str(datetime.datetime.now())))         
+#        html.append("  <hr>")
+#        html.append("  <p>%s</p>" % cgi.escape(str(datetime.datetime.now())))         
 #        if self._server_descriptor:
 #            respbody.append(self._server_descriptor + "<hr>")
+        html.append("<hr/>") 
+        html.append("<a href='http://wsgidav.googlecode.com/'>WsgiDAV/%s</a> - %s" 
+                    % (__version__, cgi.escape(str(datetime.datetime.now()))))
         html.append("</body></html>")
         html = "\n".join(html)
         return ("text/html", html)
@@ -257,7 +263,7 @@ def asDAVError(e):
     if isinstance(e, DAVError):
         return e
     elif isinstance(e, Exception):
-        print >>sys.stderr, "asHTTPRequestException: %s" % e
+#        print >>sys.stderr, "asDAVError: %s" % e
 #        traceback.print_exception(type(e), e)
         traceback.print_exc()
         return DAVError(HTTP_INTERNAL_ERROR, srcexception=e)

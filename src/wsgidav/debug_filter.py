@@ -1,5 +1,5 @@
-# (c) 2009 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
-# Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
+# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 WSGI middleware used for debugging (optional).
@@ -67,7 +67,8 @@ class WsgiDavDebugFilter(object):
     def __init__(self, application, config):
         self._application = application
         self._config = config
-        self.out = sys.stderr
+#        self.out = sys.stderr
+        self.out = sys.stdout
         self.passedLitmus = {}
         # These methods boost verbose=2 to verbose=3
         self.debug_methods = config.get("debug_methods", [])

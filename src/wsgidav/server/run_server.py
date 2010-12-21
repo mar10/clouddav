@@ -178,13 +178,15 @@ def _readConfigFile(config_file, verbose):
                 continue
             conf[k] = v               
     except Exception, e:
-        if verbose >= 1:
-            traceback.print_exc() 
+#        if verbose >= 1:
+#            traceback.print_exc() 
         exceptioninfo = traceback.format_exception_only(sys.exc_type, sys.exc_value) #@UndefinedVariable
         exceptiontext = ""
         for einfo in exceptioninfo:
             exceptiontext += einfo + "\n"   
-        raise RuntimeError("Failed to read configuration file: " + config_file + "\nDue to " + exceptiontext)
+#        raise RuntimeError("Failed to read configuration file: " + config_file + "\nDue to " + exceptiontext)
+        print >>sys.stderr, "Failed to read configuration file: " + config_file + "\nDue to " + exceptiontext
+        raise
     
     return conf
 
@@ -310,17 +312,24 @@ def _runPaste(app, config, mode):
 
 def _runCherryPy(app, config, mode):
     """Run WsgiDAV using cherrypy.wsgiserver, if CherryPy is installed."""
+    assert mode in ("cherrypy", "cherrypy-bundled")
     try:
-        # http://cherrypy.org/apidocs/3.0.2/cherrypy.wsgiserver-module.html  
-        from cherrypy import wsgiserver
-        from cherrypy import __version__ as cp_version
-        version = "WsgiDAV/%s CherryPyWSGIServer/%s" % (__version__, cp_version)
+        if mode == "cherrypy-bundled":
+            from wsgidav.server import cherrypy_wsgiserver as wsgiserver
+        else:
+            # http://cherrypy.org/apidocs/3.0.2/cherrypy.wsgiserver-module.html  
+            from cherrypy import wsgiserver, __version__ as cp_version
+        version = "WsgiDAV/%s %s" % (__version__, wsgiserver.CherryPyWSGIServer.version)
+        wsgiserver.CherryPyWSGIServer.version = version
         if config["verbose"] >= 1:
-            print "Running %s..." % version
+#            print "Running %s..." % version
+            print("Runing %s, listening on %s://%s:%s" 
+                  % (version, 'http', config["host"], config["port"]))
         server = wsgiserver.CherryPyWSGIServer(
             (config["host"], config["port"]), 
             app,
-            server_name="WsgiDAV/%s CherryPyWSGIServer" % __version__)
+#            server_name=version
+            )
         server.start()
     except ImportError, e:
         if config["verbose"] >= 1:
@@ -335,7 +344,7 @@ def _runFlup(app, config, mode):
     """Run WsgiDAV using flup.server.fcgi, if Flup is installed."""
     try:
         # http://trac.saddi.com/flup/wiki/FlupServers
-        if mode == "flup-fcgi":  
+        if mode == "flup-fcgi":
             from flup.server.fcgi import WSGIServer, __version__ as flupver
         elif mode == "flup-fcgi_fork":
             from flup.server.fcgi_fork import WSGIServer, __version__ as flupver
@@ -343,8 +352,9 @@ def _runFlup(app, config, mode):
             raise ValueError    
 
         if config["verbose"] >= 2:
-            print "Running WsgiDAV %s on %s..." % (__version__,
-                                                   WSGIServer.__module__)
+            print "Running WsgiDAV/%s %s/%s..." % (__version__,
+                                                   WSGIServer.__module__,
+                                                   flupver)
         server = WSGIServer(app,
                             bindAddress=(config["host"], config["port"]),
 #                            bindAddress=("127.0.0.1", 8001),
@@ -398,6 +408,7 @@ def _runBuiltIn(app, config, mode):
 
 SUPPORTED_SERVERS = {"paste": _runPaste,
                      "cherrypy": _runCherryPy,
+                     "cherrypy-bundled": _runCherryPy,
                      "wsgiref": _runSimpleServer,
                      "flup-fcgi": _runFlup,
                      "flup-fcgi_fork": _runFlup,

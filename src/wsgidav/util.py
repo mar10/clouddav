@@ -1,5 +1,5 @@
-# (c) 2009 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
-# Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
+# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 Miscellaneous support functions for WsgiDAV.
@@ -29,7 +29,12 @@ import calendar
 import sys
 import time
 import stat
-from email.utils import formatdate, parsedate
+
+try:
+    from email.utils import formatdate, parsedate
+except ImportError, e:
+    # Python < 2.5
+    from email.Utils import formatdate, parsedate
 
 try:
     from cStringIO import StringIO
@@ -45,6 +50,9 @@ __docformat__ = "reStructuredText"
 
 BASE_LOGGER_NAME = "wsgidav"
 _logger = logging.getLogger(BASE_LOGGER_NAME)
+# Pre-initialize, so we get some output before initLogging() was called
+# (for example during parsing of wsgidav.conf)
+logging.basicConfig(level=logging.INFO)
 
 
 #===============================================================================
@@ -125,7 +133,7 @@ def _parsegmtime(timestring):
 def initLogging(verbose=2, enable_loggers=[]):
     """Initialize base logger named 'wsgidav'.
 
-    The base logger is filtered by the *verbose* configuration option.
+    The base logger is filtered by the `verbose` configuration option.
     Log entries will have a time stamp and thread id.
     
     :Parameters:
@@ -139,7 +147,7 @@ def initLogging(verbose=2, enable_loggers=[]):
     Module loggers (e.g 'wsgidav.lock_manager') are named loggers, that can be
     independently switched to DEBUG mode.
     
-    Except for verbosity, they will will inherit settings from the base logger.
+    Except for verbosity, they will inherit settings from the base logger.
 
     They will suppress DEBUG level messages, unless they are enabled by passing 
     their name to util.initLogging().
@@ -159,7 +167,7 @@ def initLogging(verbose=2, enable_loggers=[]):
     .. python::
         enable_loggers = ["lock_manager",
                           "property_manager",
-                      ]
+                         ]
         util.initLogging(2, enable_loggers)
 
     
@@ -181,7 +189,8 @@ def initLogging(verbose=2, enable_loggers=[]):
                                   "%H:%M:%S")
     
     # Define handlers
-    consoleHandler = logging.StreamHandler(sys.stderr)
+    consoleHandler = logging.StreamHandler(sys.stdout)
+#    consoleHandler = logging.StreamHandler(sys.stderr)
     consoleHandler.setFormatter(formatter)
     consoleHandler.setLevel(logging.DEBUG)
 
@@ -323,6 +332,21 @@ def popPath(path):
     assert path.startswith("/")
     first, _sep, rest = path.lstrip("/").partition("/")
     return (first, "/"+rest)
+
+
+def popPath2(path):
+    """Return '/a/b/c' -> ('a', 'b', '/c')."""
+    if path in ("", "/"):
+        return ("", "", "")
+    first, rest = popPath(path)
+    second, rest = popPath(rest)
+    return (first, second, "/"+rest)
+
+
+def shiftPath(scriptName, pathInfo):
+    """Return ('/a', '/b/c') -> ('b', '/a/b', 'c')."""
+    segment, rest = popPath(pathInfo)
+    return (segment, joinUri(scriptName.rstrip("/"), segment), rest.rstrip("/"))
 
 
 def splitNamespace(clarkName):
@@ -505,6 +529,8 @@ def joinUri(uri, *segments):
     Example: joinUri("/a/b", "c", "d")
     """
     sub = "/".join(segments)
+    if not sub:
+        return uri
     return uri.rstrip("/") + "/" + sub
 
 
@@ -676,14 +702,14 @@ def sendStatusResponse(environ, start_response, e):
 #            ('Connection', 'keep-alive'),
 #        ]
 
-    if e in (HTTP_CREATED, HTTP_NO_CONTENT):
+    if e in (HTTP_NOT_MODIFIED, HTTP_NO_CONTENT):
         # See paste.lint: these code don't have content
         start_response(status, [("Content-Length", "0"),
                                 ("Date", getRfc1123Time()),
                                 ] + headers)
         return [ "" ]
     
-    if e == HTTP_OK:
+    if e in (HTTP_OK, HTTP_CREATED):
         e = DAVError(e)
     assert isinstance(e, DAVError)
     
@@ -1112,19 +1138,19 @@ def testLogging():
     _baseLogger.info("_baseLogger.info")  
     _baseLogger.warning("_baseLogger.warning")  
     _baseLogger.error("_baseLogger.error")  
-    print >>sys.stderr, ""
+    print 
 
     _enabledLogger.debug("_enabledLogger.debug")  
     _enabledLogger.info("_enabledLogger.info")  
     _enabledLogger.warning("_enabledLogger.warning")  
     _enabledLogger.error("_enabledLogger.error")  
-    print >>sys.stderr, ""
+    print 
     
     _disabledLogger.debug("_disabledLogger.debug")  
     _disabledLogger.info("_disabledLogger.info")  
     _disabledLogger.warning("_disabledLogger.warning")  
     _disabledLogger.error("_disabledLogger.error")  
-    print >>sys.stderr, ""
+    print 
 
     write("util.write()")
     warn("util.warn()")

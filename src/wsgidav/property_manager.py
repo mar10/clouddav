@@ -1,5 +1,5 @@
-# (c) 2009 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
-# Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
+# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 Implements two property managers: one in-memory (dict-based), and one 
@@ -132,7 +132,7 @@ class PropertyManager(object):
                         print >>out, "        %s: ERROR %s" % (k2, e)
             out.flush()
         except Exception, e:
-            print >>sys.stderr, "PropertyManager._dump()  ERROR: %s" % e            
+            util.warn("PropertyManager._dump()  ERROR: %s" % e)
 
 
     def getProperties(self, normurl):

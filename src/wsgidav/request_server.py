@@ -1,5 +1,5 @@
-# (c) 2009 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
-# Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
+# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 WSGI application that handles one single WebDAV request.
@@ -538,7 +538,7 @@ class RequestServer(object):
                                               depth=environ["HTTP_DEPTH"], 
                                               addSelf=True)
 
-        if res.supportRecursiveDelete():
+        if res.isCollection and res.supportRecursiveDelete():
             hasConflicts = False
             for childRes in reverseChildList:
                 try:
@@ -1325,7 +1325,7 @@ class RequestServer(object):
             self._fail(HTTP_NOT_FOUND)         
         elif res.isCollection: 
             self._fail(HTTP_FORBIDDEN, 
-                       "Directory browsing not supported (try the WsgiDavDirBrowser middleware).")         
+                       "Directory browsing not enabled (WsgiDavDirBrowser middleware may be enabled using the dir_browser option).")         
 
         self._evaluateIfHeaders(res, environ)
 
@@ -1394,6 +1394,7 @@ class RequestServer(object):
         else:
             start_response("200 OK", responseHeaders)
 
+        # Return empty body for HEAD requests
         if isHeadMethod:
             yield ""
             return

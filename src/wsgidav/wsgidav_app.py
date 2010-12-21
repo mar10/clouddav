@@ -1,5 +1,5 @@
-# (c) 2009 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
-# Author of original PyFileServer: Ho Chun Wei, fuzzybr80(at)gmail.com
+# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 WSGI container, that handles the HTTP requests. This object is passed to the 
@@ -57,6 +57,7 @@ from request_resolver import RequestResolver
 from domain_controller import WsgiDAVDomainController
 from property_manager import PropertyManager
 from lock_manager import LockManager
+#from wsgidav.version import __version__
 
 __docformat__ = "reStructuredText"
 
@@ -68,9 +69,10 @@ DEFAULT_CONFIG = {
     "host": "localhost",
     "port": 8080, 
     "ext_servers": [
-                   "paste", 
+#                   "paste", 
 #                   "cherrypy",
 #                   "wsgiref",
+                   "cherrypy-bundled",
                    "wsgidav",
                    ],
 
@@ -94,9 +96,12 @@ DEFAULT_CONFIG = {
                          # 3 - show full request/response header info (HTTP Logging)
                          #     request body and GET response bodies not shown
     
-    
-    # Organizational Information - printed as a footer on html output
-    "response_trailer": None,
+    "dir_browser": {
+        "enable": True,          # Render HTML listing for GET requests on collections
+        "response_trailer": "",  # Raw HTML code, appended as footer
+        "davmount": False,       # Send <dm:mount> response if request URL contains '?davmount'
+        "msmount": False,        # Add an 'open as webfolder' link (requires Windows)
+    }
 }
 
 
@@ -112,6 +117,9 @@ def _checkConfig(config):
 
 
 
+#===============================================================================
+# WsgiDAVApp
+#===============================================================================
 class WsgiDAVApp(object):
 
     def __init__(self, config):
@@ -124,7 +132,7 @@ class WsgiDAVApp(object):
         # Evaluate configuration and set defaults
         _checkConfig(config)
         provider_mapping = self.config["provider_mapping"]
-        response_trailer = config.get("response_trailer", "")
+#        response_trailer = config.get("response_trailer", "")
         self._verbose = config.get("verbose", 2)
 
         lockStorage = config.get("locksmanager") 
@@ -159,7 +167,7 @@ class WsgiDAVApp(object):
         wdcName = "NTDomainController"
         if domainController.__class__.__name__ == wdcName:
             if authacceptdigest or authdefaultdigest or not authacceptbasic:
-                print >>sys.stderr, "WARNING: %s requires basic authentication.\n\tSet acceptbasic=True, acceptdigest=False, defaultdigest=False" % wdcName
+                util.warn("WARNING: %s requires basic authentication.\n\tSet acceptbasic=True, acceptdigest=False, defaultdigest=False" % wdcName)
                 
         # Instantiate DAV resource provider objects for every share
         self.providerMap = {}
@@ -167,7 +175,7 @@ class WsgiDAVApp(object):
             # Make sure share starts with, or is, '/' 
             share = "/" + share.strip("/")
 
-            # We allow a simple string a 'provider'. In this case we interpret 
+            # We allow a simple string as 'provider'. In this case we interpret 
             # it as a file system root folder that is published. 
             if isinstance(provider, basestring):
                 provider = FilesystemProvider(provider)
@@ -205,15 +213,16 @@ class WsgiDAVApp(object):
 
         # Define WSGI application stack
         application = RequestResolver()
-        application = WsgiDavDirBrowser(application)
+        
+        if config.get("dir_browser") and config["dir_browser"].get("enable", True):
+            application = WsgiDavDirBrowser(application)
+
         application = HTTPAuthenticator(application, 
                                         domainController, 
                                         authacceptbasic, 
                                         authacceptdigest, 
                                         authdefaultdigest)      
-        application = ErrorPrinter(application, 
-                                   server_descriptor=response_trailer,
-                                   catchall=False)
+        application = ErrorPrinter(application, catchall=False)
 
         application = WsgiDavDebugFilter(application, config)
         
@@ -332,10 +341,10 @@ class WsgiDAVApp(object):
             
             # Log request
             if self._verbose >= 1:
-                threadInfo = ""
                 userInfo = environ.get("http_authenticator.username")
                 if not userInfo:
                     userInfo = "(anonymous)"
+                threadInfo = ""
                 if self._verbose >= 1:
                     threadInfo = "<%s> " % threading._get_ident()
                 extra = []
@@ -363,7 +372,8 @@ class WsgiDAVApp(object):
                         
 #               This is the CherryPy format:     
 #                127.0.0.1 - - [08/Jul/2009:17:25:23] "GET /loginPrompt?redirect=/renderActionList%3Frelation%3Dpersonal%26key%3D%26filter%3DprivateSchedule&reason=0 HTTP/1.1" 200 1944 "http://127.0.0.1:8002/command?id=CMD_Schedule" "Mozilla/5.0 (Windows; U; Windows NT 6.0; de; rv:1.9.1) Gecko/20090624 Firefox/3.5"
-                print >>sys.stderr, '%s - %s - [%s] "%s" %s -> %s' % (
+#                print >>sys.stderr, '%s - %s - [%s] "%s" %s -> %s' % (
+                print >>sys.stdout, '%s - %s - [%s] "%s" %s -> %s' % (
                                         threadInfo + environ.get("REMOTE_ADDR",""),                                                         
                                         userInfo,
                                         util.getLogTime(), 
