@@ -1,15 +1,11 @@
 # -*- coding: iso-8859-1 -*-
-from btfs.model import Path, Dir, File
-
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
-
 """
 Implementation of a WsgiDAV provider that implements a virtual file system based
 on Google's Big Table.
 """
-import os
-
+from btfs.model import Path, Dir, File
 import logging
 import md5
 import mimetypes
@@ -19,7 +15,7 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO #@UnusedImport
-from wsgidav.dav_provider import DAVProvider, DAVResource
+from wsgidav.dav_provider import DAVProvider, _DAVResource
 from wsgidav import util
 
 __docformat__ = "reStructuredText en"
@@ -30,27 +26,24 @@ BUFFER_SIZE = 8192
 #===============================================================================
 # BTFSResource classes
 #===============================================================================
-class BTFSResource(DAVResource):
+class BTFSResource(_DAVResource):
     """."""
     _supportedProps = ["{btfs:}key",
                        ]
 
-    def __init__(self, provider, path, environ):
+    def __init__(self, path, environ):
         self.pathEntity = Path.retrieve(path)
         if not self.pathEntity:
             raise ValueError("Path not found: %r" % path)
         isCollection = ( type(self.pathEntity) is Dir )
         logging.debug("BTFSResource(%r): %r" % (path, isCollection))
-        super(BTFSResource, self).__init__(provider, path, isCollection, environ)
-#        self.statresults = fs.stat(self.path)
+        super(BTFSResource, self).__init__(path, isCollection, environ)
         self.statresults = fs.stat(self.pathEntity)
-        
 
     def getContentLength(self):
         if self.isCollection:
             return None
         return self.statresults.st_size
-
 
     def getContentType(self):
         if self.isCollection:
@@ -69,12 +62,6 @@ class BTFSResource(DAVResource):
     def getDisplayName(self):
         return self.name
     
-#    def displayType(self):
-#        if self.isfs.isdir(respath):
-#         return "Directory"
-#      elif fs.isfile(respath):
-#         return "File"
-
     def getEtag(self):
         if self.isCollection:
             return '"' + md5.new(self.path).hexdigest() +'"'
@@ -85,23 +72,21 @@ class BTFSResource(DAVResource):
     
     def supportRanges(self):
         return True
-    
 
-    def getMemberList(self):
-        """Return list of (direct) collection members (DAVResource or derived).
+    def getMemberNames(self):
+        """Return list of (direct) collection member names (_DAVResource or derived).
         
-        See DAVResource.getMemberList()
+        See _DAVResource.getMemberList()
         """
-        memberList = []
-        for name in fs.listdir(self.pathEntity):
-            # TODO: required?:
-#            name = name.encode("utf8")
-            res = BTFSResource(self.provider, 
-                               util.joinUri(self.path, name), 
-                               self.environ)
-            memberList.append(res)
-        return memberList
-
+        return fs.listdir(self.pathEntity)
+    
+    def getMember(self, name):
+        """Return list of (direct) collection members (_DAVResource or derived).
+        
+        See _DAVResource.getMemberList()
+        """
+        res = BTFSResource(util.joinUri(self.path, name), self.environ)
+        return res
 
 #    def handleDelete(self):
 #        raise DAVError(HTTP_FORBIDDEN)
@@ -116,7 +101,7 @@ class BTFSResource(DAVResource):
     def createEmptyResource(self, name):
         """Create an empty (length-0) resource.
         
-        See DAVResource.createEmptyResource()
+        See _DAVResource.createEmptyResource()
         """
         assert self.isCollection
         assert not "/" in name
@@ -131,7 +116,7 @@ class BTFSResource(DAVResource):
     def createCollection(self, name):
         """Create a new collection as member of self.
         
-        See DAVResource.createCollection()
+        See _DAVResource.createCollection()
         """
         assert self.isCollection
         path = util.joinUri(self.path, name) 
@@ -141,7 +126,7 @@ class BTFSResource(DAVResource):
     def getContent(self):
         """Open content as a stream for reading.
          
-        See DAVResource.getContent()
+        See _DAVResource.getContent()
         """
         assert not self.isCollection
 #        return fs.btopen(self.path, "rb")
@@ -151,7 +136,7 @@ class BTFSResource(DAVResource):
     def beginWrite(self, contentType=None):
         """Open content as a stream for writing.
          
-        See DAVResource.beginWrite()
+        See _DAVResource.beginWrite()
         """
         assert not self.isCollection
 #        return fs.btopen(self.path, "wb")
@@ -161,7 +146,7 @@ class BTFSResource(DAVResource):
     def delete(self):
         """Remove this resource or collection (recursive).
         
-        See DAVResource.delete()
+        See _DAVResource.delete()
         """
         if self.isCollection:
 #            fs.rmtree(self.path)
@@ -174,7 +159,7 @@ class BTFSResource(DAVResource):
             
 
     def copyMoveSingle(self, destPath, isMove):
-        """See DAVResource.copyMoveSingle() """
+        """See _DAVResource.copyMoveSingle() """
         assert not util.isEqualOrChildUri(self.path, destPath)
         if self.isCollection:
             # Create destination collection, if not exists
@@ -205,7 +190,7 @@ class BTFSResource(DAVResource):
 
     
 #    def moveRecursive(self, destPath):
-#        """See DAVResource.moveRecursive() """
+#        """See _DAVResource.moveRecursive() """
 #        # FIXME
 #        raise NotImplementedError()
 #        fpDest = self.provider._locToFilePath(destPath)
@@ -226,7 +211,7 @@ class BTFSResource(DAVResource):
     def getPropertyNames(self, isAllProp):
         """Return list of supported property names in Clark Notation.
         
-        See DAVResource.getPropertyNames() 
+        See _DAVResource.getPropertyNames() 
         """
         # Let base class implementation add supported live and dead properties
         propNameList = super(BTFSResource, self).getPropertyNames(isAllProp)
@@ -237,7 +222,7 @@ class BTFSResource(DAVResource):
     def getPropertyValue(self, propname):
         """Return the value of a property.
         
-        See DAVResource.getPropertyValue()
+        See _DAVResource.getPropertyValue()
         """
         # Supported custom live properties
         if propname == "{btfs:}key":
@@ -249,7 +234,7 @@ class BTFSResource(DAVResource):
 #    def setPropertyValue(self, propname, value, dryRun=False):
 #        """Set or remove property value.
 #        
-#        See DAVResource.setPropertyValue()
+#        See _DAVResource.setPropertyValue()
 #        """
 #        if value is None:
 #            # We can never remove properties
@@ -288,8 +273,10 @@ class BTFSResourceProvider(DAVProvider):
 
     def getResourceInst(self, path, environ):
         self._count_getResourceInst += 1
-        logging.debug("getResourceInst('%s')" % path)
         try:
-            return BTFSResource(self, path, environ)
+            res = BTFSResource(path, environ)
         except:
-            return None
+            logging.exception("getResourceInst(%s) failed" % path)
+            res = None
+        logging.debug("getResourceInst('%s'): %s" % (path, res))
+        return res

@@ -4,8 +4,8 @@ import threading
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 #
-# The original source for this module was written by Haoyu Bai (http://gaedav.google.com/).  
-
+# The original source for this module was taken from gaedav:
+# (c) 2009 Haoyu Bai (http://gaedav.google.com/).
 """
 Implement cache mechanism.
 """

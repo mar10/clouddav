@@ -1,21 +1,17 @@
 # -*- coding: iso-8859-1 -*-
-import logging
-
-
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
-# Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 #
-# The original source for this module was written by Haoyu Bai (http://gaedav.google.com/).  
-
-import time
-import StringIO
-#import logging
-from model import Dir, File, Path
-#from btfs import memcash
-
+# The original source for this module was taken from gaedav:
+# (c) 2009 Haoyu Bai (http://gaedav.google.com/).
 """
 File system operations.
 """
+
+import time
+import StringIO
+import logging
+from model import Dir, File, Path
+#from btfs import memcash
 
 def initfs():
     """
@@ -111,9 +107,9 @@ def stat(s):
         def __repr__(self):
             return 'stat_result(st_size=%r, st_atime=%r, st_mtime=%r, st_ctime=%r)' % self
 
-        def _asdict(t):
-            'Return a new dict which maps field names to their values'
-            return {'st_size': t[0], 'st_atime': t[1], 'st_mtime': t[2], 'st_ctime': t[3]}
+#        def _asdict(t):
+#            'Return a new dict which maps field names to their values'
+#            return {'st_size': t[0], 'st_atime': t[1], 'st_mtime': t[2], 'st_ctime': t[3]}
 
         def _replace(self, **kwds):
             'Return a new stat_result object replacing specified fields with new values'
