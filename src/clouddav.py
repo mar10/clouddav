@@ -8,10 +8,10 @@ from wsgidav.wsgidav_app import WsgiDAVApp, DEFAULT_CONFIG
 from btfs.btfs_dav_provider import BTFSResourceProvider
 from btfs.memcache_lock_storage import LockStorageMemcache
 from btfs.google_domain_controller import GoogleDomainController
-#from wsgidav.version import __version__
-
 from google.appengine.ext.webapp.util import run_wsgi_app
-#import os
+
+__version__ = "0.1.0a1"
+
 
 def real_main():
     logging.debug("real_main")
@@ -34,6 +34,12 @@ def real_main():
         "acceptdigest": False,    
         "defaultdigest": False,    
         "domaincontroller": domainController,
+        "dir_browser": {
+            "enable": True,          # Render HTML listing for GET requests on collections
+            "response_trailer": "<a href='http://clouddav.googlecode.com/'>CloudDAV/%s</a> ${version} - ${time}" % __version__,
+            "davmount": True,       # Send <dm:mount> response if request URL contains '?davmount'
+            "msmount": True,        # Add an 'open as webfolder' link (requires Windows)
+            },
         })
     app = WsgiDAVApp(config)
     run_wsgi_app(app)

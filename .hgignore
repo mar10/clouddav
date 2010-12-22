@@ -3,3 +3,4 @@ glob:src/app.yaml
 
 syntax: regexp
 ^upload\.bat$
+glob:*.orig

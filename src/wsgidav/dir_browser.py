@@ -24,7 +24,6 @@ class WsgiDavDirBrowser(object):
         self._application = application
         self._verbose = 2
 
-
     def __call__(self, environ, start_response):
         path = environ["PATH_INFO"]
         
@@ -95,30 +94,48 @@ class WsgiDavDirBrowser(object):
         
         dirConfig = environ["wsgidav.config"].get("dir_browser", {})
         displaypath = urllib.unquote(davres.getHref())
+
         trailer = dirConfig.get("response_trailer")
+        if trailer:
+            trailer = trailer.replace("${version}", 
+                "<a href='http://wsgidav.googlecode.com/'>WsgiDAV/%s</a>" % __version__)
+            trailer = trailer.replace("${time}", util.getRfc1123Time())
+        else:
+            trailer = ("<a href='http://wsgidav.googlecode.com/'>WsgiDAV/%s</a> - %s" 
+                       % (__version__, util.getRfc1123Time()))
+
         
         html = []
         html.append("<!DOCTYPE HTML PUBLIC '-//W3C//DTD HTML 4.01//EN' 'http://www.w3.org/TR/html4/strict.dtd'>");
         html.append("<html>")
         html.append("<head>")
         html.append("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>")
+        html.append("<meta name='generator' content='WsgiDAV %s'>" % __version__)
         html.append("<title>WsgiDAV - Index of %s </title>" % displaypath)
         
+        html.append("""\
+<style type="text/css">
+    img { border: 0; padding: 0 2px; vertical-align: text-bottom; }
+    th, td { padding: 2px 20px 2px 2px; }
+    th { text-align: left; }
+    th.right { text-align: right; }
+    td  { font-family: monospace; vertical-align: bottom; white-space: pre; }
+    td.right { text-align: right; }
+    table { border: 0; }
+    a.symlink { font-style: italic; }
+    p.trailer { font-size: smaller; }
+</style>""")        
+        # Special CSS to enable MS Internet Explorer behaviour
         if dirConfig.get("msmount"):
             html.append("""\
 <style type="text/css">
-    img { border: 0; padding: 0 2px; vertical-align: text-bottom; }
-    td  { font-family: monospace; padding: 2px 3px; vertical-align: bottom; white-space: pre; }
-    td.right { text-align: right; padding: 2px 10px 2px 3px; }
-    table { border: 0; }
-    a.symlink { font-style: italic; }
-    
     A {behavior: url(#default#AnchorClick);}
-</style>""")        
+</style>""")
+        
         html.append("</head><body>")
 
         # Title
-        html.append("<h1>%s</h1>" % displaypath)
+        html.append("<h1>Index of %s</h1>" % displaypath)
         # Add DAV-Mount link and Web-Folder link
         links = []
         if dirConfig.get("davmount"):
@@ -127,17 +144,22 @@ class WsgiDavDirBrowser(object):
             links.append("<a title='Open as Web Folder (requires Microsoft Internet Explorer)' href='' FOLDER='%s'>Open as Web Folder</a>" % util.makeCompleteUrl(environ))
 #                html.append("<a href='' FOLDER='%ssetup.py'>Open setup.py as WebDAV</a>" % util.makeCompleteUrl(environ))
         if links:
-            html.append("<p>%s</p>" % " - ".join(links))
+            html.append("<p>%s</p>" % " &#8211; ".join(links))
 
         html.append("<hr>")
         # Listing
         html.append("<table>")
 
+        html.append("<thead>")
+        html.append("<tr><th>Name</th> <th>Type</th> <th class='right'>Size</th> <th class='right'>Last modified</th> </tr>")
+        html.append("</thead>")
+            
+        html.append("<tbody>")
         if davres.path in ("", "/"):
-            html.append("<tr><td colspan='4'>Top level share</td></tr>")
+            html.append("<tr><td>Top level share</td> <td></td> <td></td> <td></td> </tr>")
         else:
             parentUrl = util.getUriParent(davres.getHref())
-            html.append("<tr><td colspan='4'><a href='" + parentUrl + "'>Parent folder</a></td></tr>")
+            html.append("<tr><td><a href='" + parentUrl + "'>Parent Directory</a></td> <td></td> <td></td> <td></td> </tr>")
 
         # Ask collection for member info list
         dirInfoList = davres.getDirectoryInfo()
@@ -165,7 +187,7 @@ class WsgiDavDirBrowser(object):
             else:
                 infoDict["strModified"] = util.getRfc1123Time(lastModified)
             
-            infoDict["strSize"] = ""
+            infoDict["strSize"] = "-"
             if not infoDict.get("isCollection"):
                 contentLength = infoDict.get("contentLength")
                 if contentLength is not None:
@@ -177,18 +199,24 @@ class WsgiDavDirBrowser(object):
             <td class='right'>%(strSize)s</td>
             <td class='right'>%(strModified)s</td></tr>""" % infoDict)
             
+        html.append("</tbody>")
         html.append("</table>")
 
-        if trailer:
-            html.append("%s" % trailer)
         html.append("<hr>") 
-        if "http_authenticator.username" in environ:
-            html.append("<p>Authenticated user: '%s', realm: '%s'.</p>" 
-                          % (environ.get("http_authenticator.username"),
-                             environ.get("http_authenticator.realm")))
 
-        html.append("<p><a href='http://wsgidav.googlecode.com/'>WsgiDAV/%s</a> - %s</p>" 
-                      % (__version__, util.getRfc1123Time()))
+        if "http_authenticator.username" in environ:
+            if environ.get("http_authenticator.username"):
+                html.append("<p>Authenticated user: '%s', realm: '%s'.</p>" 
+                              % (environ.get("http_authenticator.username"),
+                                 environ.get("http_authenticator.realm")))
+#            else:
+#                html.append("<p>Anonymous</p>")
+
+        if trailer:
+            html.append("<p class='trailer'>%s</p>" % trailer)
+#            html.append("<p class='trailer'><a href='http://wsgidav.googlecode.com/'>WsgiDAV/%s</a> - %s</p>" 
+#                          % (__version__, util.getRfc1123Time()))
+
         html.append("</body></html>")
 
         body = "\n".join(html) 
