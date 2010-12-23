@@ -143,6 +143,16 @@ class BTFSResource(_DAVResource):
         return fs.btopen(self.pathEntity, "wb")
 
     
+    def supportRecursiveDelete(self):
+        """Return True, if delete() may be called on non-empty collections 
+        (see comments there).
+        
+        This method MUST be implemented for collections (not called on 
+        non-collections).
+        """
+        # TODO: should support recursive operations 
+        return False
+
     def delete(self):
         """Remove this resource or collection (recursive).
         
@@ -184,9 +194,8 @@ class BTFSResource(_DAVResource):
 
     def supportRecursiveMove(self, destPath):
         """Return True, if moveRecursive() is available (see comments there)."""
-        # FIXME:
+        # TODO: should support recursive operations 
         return False
-#        return True
 
     
 #    def moveRecursive(self, destPath):
@@ -259,7 +268,7 @@ class BTFSResource(_DAVResource):
         
          
 #===============================================================================
-# VirtualResourceProvider
+# BTFSResourceProvider
 #===============================================================================
 
 class BTFSResourceProvider(DAVProvider):
@@ -269,14 +278,13 @@ class BTFSResourceProvider(DAVProvider):
     def __init__(self):
         super(BTFSResourceProvider, self).__init__()
         fs.initfs()
-        
 
     def getResourceInst(self, path, environ):
         self._count_getResourceInst += 1
         try:
             res = BTFSResource(path, environ)
         except:
-            logging.exception("getResourceInst(%s) failed" % path)
+            logging.exception("getResourceInst(%r) failed" % path)
             res = None
-        logging.debug("getResourceInst('%s'): %s" % (path, res))
+        logging.debug("getResourceInst(%r): %s" % (path, res))
         return res

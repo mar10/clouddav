@@ -57,17 +57,17 @@ class Path(polymodel.PolyModel):
          / -> /
          // -> /
         """
-        # XXX: this is not portable on win32
 #        if not isinstance(p, unicode):
 #            logging.debug("Path.normalize: encoding str %s to unicode.", repr(p))
 #            p = str.decode(p, 'utf-8')
+        if not isinstance(p, unicode):
+            p = p.decode('utf-8')
         result = os.path.normpath(p)
         # mw: added for Windows:
         result = result.replace("\\", "/")
         result = result.replace('//','/')
-        if not isinstance(result, unicode):
-#            logging.debug("Path.normalize: encoding str %s to unicode.", repr(p))
-            result = result.decode('utf-8')
+#        if not isinstance(result, unicode):
+#            result = result.decode('utf-8')
         if p != result:
             logging.debug("Path.normalize(%r): %r." % (p, result))
         return result
