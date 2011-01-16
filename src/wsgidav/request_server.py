@@ -1,4 +1,4 @@
-# (c) 2009-2010 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
+# (c) 2009-2011 Martin Wendt and contributors; see WsgiDAV http://wsgidav.googlecode.com/
 # Original PyFileServer (c) 2005 Ho Chun Wei.
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
@@ -1389,7 +1389,8 @@ class RequestServer(object):
             responseHeaders.append(("ETag", '"%s"' % entitytag))
  
         if ispartialranges:
-            responseHeaders.append(("Content-Ranges", "bytes " + str(rangestart) + "-" + str(rangeend) + "/" + str(rangelength)))
+#            responseHeaders.append(("Content-Ranges", "bytes " + str(rangestart) + "-" + str(rangeend) + "/" + str(rangelength)))
+            responseHeaders.append(("Content-Range", "bytes %s-%s/%s" % (rangestart, rangeend, filesize)))
             start_response("206 Partial Content", responseHeaders)   
         else:
             start_response("200 OK", responseHeaders)
