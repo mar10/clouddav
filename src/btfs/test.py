@@ -47,7 +47,7 @@ def test():
     provider = BTFSResourceProvider()
     lockman = LockManager(LockStorageMemcache())
     provider.setLockManager(lockman)
-    environ = {}
+    environ = {"wsgidav.provider": provider}
     
     resRoot = provider.getResourceInst(rootpath+"/", environ)
     resRoot.createCollection("folder1")
