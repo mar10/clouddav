@@ -1,5 +1,5 @@
 # ignore old wsgidav version
-src/wsgidav
+src/wsgidav/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
