@@ -8,8 +8,11 @@ File system operations.
 """
 from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
 import time
-import StringIO
+import io
 import logging
 from .model import Dir, File, Path
 #from btfs import memcash
@@ -114,9 +117,9 @@ def stat(s):
 
         def _replace(self, **kwds):
             'Return a new stat_result object replacing specified fields with new values'
-            result = self._make(map(kwds.pop, ('st_size', 'st_atime', 'st_mtime', 'st_ctime'), self))
+            result = self._make(list(map(kwds.pop, ('st_size', 'st_atime', 'st_mtime', 'st_ctime'), self)))
             if kwds:
-                raise ValueError('Got unexpected field names: %r' % kwds.keys())
+                raise ValueError('Got unexpected field names: %r' % list(kwds.keys()))
             return result
 
         def __getnewargs__(self):
@@ -182,28 +185,28 @@ def listdir(s):
 #===============================================================================
 # BtIO
 #===============================================================================
-class BtIO(StringIO.StringIO):
+class BtIO(io.StringIO):
     """
     Bigtable file IO object
     """
     def __init__(self, btfile, mode):
         self.btfile = btfile
         self.mode = mode
-        StringIO.StringIO.__init__(self, btfile.get_content())
+        io.StringIO.__init__(self, btfile.get_content())
         return
 
     def is_readonly(self):
         return 'w' not in self.mode
 
     def flush(self):
-        StringIO.StringIO.flush(self)
+        io.StringIO.flush(self)
         if not self.is_readonly():
             self.btfile.put_content(self.getvalue())
         return
 
     def close(self):
         self.flush()
-        StringIO.StringIO.close(self)
+        io.StringIO.close(self)
         return
 
     def __del__(self):

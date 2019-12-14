@@ -35,11 +35,14 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 .. _`Developers info`: http://docs.wsgidav.googlecode.com/hg/html/develop.html  
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import logging 
 import sys
-import urllib
-import urllib2
-import cookielib
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import http.cookiejar
 
 from google.appengine.api import users 
 from auth import AuthorizedUser, findAuthUser
@@ -49,7 +52,7 @@ __docformat__ = "reStructuredText"
 #===============================================================================
 # xAppAuth
 #===============================================================================
-class xAppAuth:
+class xAppAuth(object):
     """
     Author: Dale Lane; Modified by 'youngfe' on this page:
     http://dalelane.co.uk/blog/?p=303
@@ -65,19 +68,19 @@ class xAppAuth:
     def getAuthtoken(self, refresh=False):
         if self.authtoken is None or refresh:
             self.lastError = (None, None, None)
-            cookiejar = cookielib.LWPCookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-            urllib2.install_opener(opener)
+            cookiejar = http.cookiejar.LWPCookieJar()
+            opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookiejar))
+            urllib.request.install_opener(opener)
             auth_uri = "https://www.google.com/accounts/ClientLogin"
-            authreq_data = urllib.urlencode({"Email": self.user,
+            authreq_data = urllib.parse.urlencode({"Email": self.user,
                 "Passwd": self.password,
                 "service": "ah",
                 "source": self.appName,
                 "accountType": "HOSTED_OR_GOOGLE" })
-            auth_req = urllib2.Request(auth_uri, data=authreq_data)
+            auth_req = urllib.request.Request(auth_uri, data=authreq_data)
             try:
-                auth_resp = urllib2.urlopen(auth_req)
-            except urllib2.HTTPError as e:
+                auth_resp = urllib.request.urlopen(auth_req)
+            except urllib.error.HTTPError as e:
                 self.lastError = (e.code, e.msg, None)
                 if e.code == 403:  
                     # '403 Forbidden': unknown user or wrong password
@@ -98,13 +101,13 @@ class xAppAuth:
         serv_args = {}
         serv_args["continue"] = serv_uri
         serv_args["auth"] = self.getAuthtoken()
-        return "http://" + AppName + ".appspot.com/_ah/login?%s" % (urllib.urlencode(serv_args))
+        return "http://" + AppName + ".appspot.com/_ah/login?%s" % (urllib.parse.urlencode(serv_args))
     
     def getAuthRequest(self, Uri, AppName):
-        return urllib2.Request(self.getAuthUrl(Uri, AppName))
+        return urllib.request.Request(self.getAuthUrl(Uri, AppName))
     
     def getAuthResponse(self, Uri, AppName):
-        return urllib2.urlopen(self.getAuthRequest(Uri, AppName))
+        return urllib.request.urlopen(self.getAuthRequest(Uri, AppName))
     
     def getAuthRead(self, Uri, AppName):
         return self.getAuthResponse(Uri, AppName).read()
@@ -200,7 +203,7 @@ class GoogleDomainController(object):
         try:
             authToken = user.getAuthtoken()
             logging.debug("User %s is authorized: %s" % (username, authToken))
-        except urllib2.HTTPError as _:
+        except urllib.error.HTTPError as _:
             logging.info("User %s is not authorized: %s" % (username, user.lastError))
             authToken = None
         return bool(authToken) 

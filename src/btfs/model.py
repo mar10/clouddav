@@ -6,6 +6,8 @@
 # (c) 2009 Haoyu Bai (http://gaedav.google.com/).
 
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import os.path
 import logging
 from google.appengine.ext import db
@@ -61,7 +63,7 @@ class Path(polymodel.PolyModel):
 #        if not isinstance(p, unicode):
 #            logging.debug("Path.normalize: encoding str %s to unicode.", repr(p))
 #            p = str.decode(p, 'utf-8')
-        if not isinstance(p, unicode):
+        if not isinstance(p, str):
             p = p.decode('utf-8')
         result = os.path.normpath(p)
         # mw: added for Windows:

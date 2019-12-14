@@ -3,6 +3,8 @@
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
 # Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 
+from future import standard_library
+standard_library.install_aliases()
 import logging 
 from wsgidav.wsgidav_app import WsgiDAVApp, DEFAULT_CONFIG
 from btfs.btfs_dav_provider import BTFSResourceProvider
@@ -48,10 +50,10 @@ def real_main():
 def profile_main():
     # This is the main function for profiling 
     # We've renamed our original main() above to real_main()
-    import cProfile, pstats, StringIO
+    import cProfile, pstats, io
     prof = cProfile.Profile()
     prof = prof.runctx("real_main()", globals(), locals())
-    stream = StringIO.StringIO()
+    stream = io.StringIO()
     stats = pstats.Stats(prof, stream=stream)
     stats.sort_stats("time")  # Or cumulative
     stats.print_stats(80)  # 80 = how many to print

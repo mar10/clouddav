@@ -6,6 +6,9 @@ Implementation of a WsgiDAV provider that implements a virtual file system based
 on Google's Big Table.
 """
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 from btfs.model import Path, Dir, File
 import logging
 import md5
@@ -13,9 +16,9 @@ import mimetypes
 from . import fs
 
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
-    from StringIO import StringIO #@UnusedImport
+    from io import StringIO #@UnusedImport
 from wsgidav.dav_provider import DAVProvider, _DAVResource
 from wsgidav import util
 

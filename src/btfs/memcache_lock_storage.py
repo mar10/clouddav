@@ -21,6 +21,7 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 .. _`Developers info`: http://docs.wsgidav.googlecode.com/hg/html/develop.html  
 """
 from __future__ import absolute_import
+from builtins import object
 import logging
 from wsgidav import util
 from wsgidav.lock_manager import normalizeLockRoot, lockString,\
@@ -220,7 +221,7 @@ class LockStorageMemcache(object):
             __appendLocks(lockRoots[path])
                 
         if includeChildren:
-            for root, toks in lockRoots.items():
+            for root, toks in list(lockRoots.items()):
                 if util.isChildUri(path, root): 
                     __appendLocks(toks)
         

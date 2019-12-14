@@ -6,6 +6,8 @@ Implementation of a WsgiDAV provider that implements a virtual file system based
 on Googles datastore (Bigtable). 
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
 from btfs.memcache_lock_storage import LockStorageMemcache
 from wsgidav.lock_manager import LockManager, lockString
 import logging
@@ -95,10 +97,10 @@ def test():
 
 def profile_test():
     # This is the main function for profiling 
-    import cProfile, pstats, StringIO
+    import cProfile, pstats, io
     prof = cProfile.Profile()
     prof = prof.runctx("test()", globals(), locals())
-    stream = StringIO.StringIO()
+    stream = io.StringIO()
     stats = pstats.Stats(prof, stream=stream)
 #    stats.sort_stats("time")  # Or cumulative
     stats.sort_stats("cumulative")  # Or time

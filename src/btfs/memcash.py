@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import map
 import time, os, random
 from google.appengine.api import memcache
 CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID','0')
@@ -107,7 +109,7 @@ def cash(ttl=60, key=None, ver=CURRENT_VERSION_ID, pre='', off=False):
     :param off: Caching will be disabled if off is set to True.
     """
     
-    ttl = long(ttl)
+    ttl = int(ttl)
     keytmpl = 'cash(v=%s,k=%s:%%s)' % (ver,pre)
     def decorator(wrapped):
         if off:
@@ -128,7 +130,7 @@ def cash(ttl=60, key=None, ver=CURRENT_VERSION_ID, pre='', off=False):
             else:
                 make_key = lambda *a, **k: '%s(%s)'%(kee,','.join(map(str,a)))
         def wrapper(*args, **kwargs):
-            now = long(time.time())
+            now = int(time.time())
             keystr = keytmpl % make_key(*args, **kwargs)
             if keystr in local_cache:
                 expire, val = local_cache[keystr]

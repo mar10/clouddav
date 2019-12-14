@@ -49,7 +49,7 @@ class AdminHandler(webapp.RequestHandler):
             url = users.create_login_url(self.request.uri)
             url_linktext = 'Login'
         env = []
-        for k, v in os.environ.items():
+        for k, v in list(os.environ.items()):
             env.append("%s: '%s'" % (k, v))
         template_values = {
             "nickname": user.nickname(),

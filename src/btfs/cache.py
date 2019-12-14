@@ -1,4 +1,5 @@
 # -*- coding: iso-8859-1 -*-
+from builtins import object
 import threading
 
 # (c) 2010 Martin Wendt; see CloudDAV http://clouddav.googlecode.com/
@@ -160,7 +161,7 @@ class NamespacedCache(object):
 
 
     def set_multi(self, mapping, time=0, key_prefix=''):
-        for key, value in mapping.items():
+        for key, value in list(mapping.items()):
             logging.debug("Cache add multi: %r.%r = %r" % (self.namespace, key, value))
         return memcache.set_multi(mapping, namespace=self.namespace, time=time, 
                                   key_prefix=key_prefix)
