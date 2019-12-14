@@ -104,13 +104,13 @@ class DeleteAuthorizedUser(webapp.RequestHandler):
         self.redirect('/auth/users')
 
 
-application = webapp.WSGIApplication([('/auth/users', ManageAuthorizedUsers),
-                                      ('/auth/useradd', ManageAuthorizedUsers),
-                                      ('/auth/userdelete', DeleteAuthorizedUser)],
-                                     debug=True)
+app = webapp.WSGIApplication([('/auth/users', ManageAuthorizedUsers),
+                              ('/auth/useradd', ManageAuthorizedUsers),
+                              ('/auth/userdelete', DeleteAuthorizedUser)],
+                             debug=True)
 
 def main():
-    run_wsgi_app(application)
+    run_wsgi_app(app)
 
 if __name__ == "__main__":
     main()

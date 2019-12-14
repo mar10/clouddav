@@ -15,27 +15,34 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 __version__ = "0.1.0a1"
 
 
-def real_main():
+def create_app():
     logging.debug("real_main")
     provider = BTFSResourceProvider()
     lockstorage = LockStorageMemcache()
-    domainController = GoogleDomainController()
+    #domainController = GoogleDomainController()
 
     config = DEFAULT_CONFIG.copy()
     config.update({
         "provider_mapping": {"/": provider},
         "verbose": 2,
         "enable_loggers": [],
-        "propsmanager": False,                    
-        "locksmanager": lockstorage,
+        "property_manager": False,
+        "lock_manager": lockstorage,
 
         # Use Basic Authentication and don't fall back to Digest Authentication,
         # because our domain controller doesn't have no access to the user's 
         # passwords.
-        "acceptbasic": True,      
-        "acceptdigest": False,    
-        "defaultdigest": False,    
-        "domaincontroller": domainController,
+        "http_authenticator": {
+            # None: dc.simple_dc.SimpleDomainController(user_mapping)
+            #"domain_controller": None,
+            "domain_controller": GoogleDomainController,
+            "accept_basic": True,  # Allow basic authentication, True or False
+            "accept_digest": False,  # Allow digest authentication, True or False
+            "default_to_digest": False,  # True (default digest) or False (default basic)
+            # Name of a header field that will be accepted as authorized user
+            #"trusted_auth_header": None,
+        },
+        "google_dc": {},
         "dir_browser": {
             "enable": True,          # Render HTML listing for GET requests on collections
             "response_trailer": "<a href='http://clouddav.googlecode.com/'>CloudDAV/%s</a> ${version} - ${time}" % __version__,
@@ -43,7 +50,13 @@ def real_main():
             "msmount": True,        # Add an 'open as webfolder' link (requires Windows)
             },
         })
-    app = WsgiDAVApp(config)
+    return WsgiDAVApp(config)
+
+# Using WSGI - https://cloud.google.com/appengine/docs/standard/python/migrate27#wsgi
+app = create_app()
+
+
+def real_main():
     run_wsgi_app(app)
 
 

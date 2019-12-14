@@ -40,12 +40,12 @@ standard_library.install_aliases()
 from builtins import object
 import logging 
 import sys
-import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import http.cookiejar
 
 from google.appengine.api import users 
 from auth import AuthorizedUser, findAuthUser
+from wsgidav.dc.base_dc import BaseDomainController
 __docformat__ = "reStructuredText"
 
 
@@ -125,27 +125,36 @@ class xAppAuth(object):
 #===============================================================================
 # GoogleDomainController
 #===============================================================================
-class GoogleDomainController(object):
+class GoogleDomainController(BaseDomainController):
 
-    def __init__(self, userMap=None):
+    #def __init__(self, userMap=None):
+    def __init__(self, wsgidav_app, config):
+        super(GoogleDomainController, self).__init__(wsgidav_app, config)
+        dc_conf = config.get("google_dc", {})
 #        self.appName = appName
-        self.userMap = userMap
+#        self.userMap = userMap
 
     def __repr__(self):
         return self.__class__.__name__
 
-    def getDomainRealm(self, inputURL, environ):
+    def getDomainRealm(self, path_info, environ):
         """Resolve a relative url to the  appropriate realm name."""
         # we don't get the realm here, its already been resolved in request_resolver
+        realm = self._calc_realm_from_path_provider(path_info, environ)
+        return realm
+        """
+        if environ is None:
+            return "/"
         davProvider = environ["wsgidav.provider"]
         if not davProvider:
             if environ["wsgidav.verbose"] >= 2:
-                print("getDomainRealm(%s): '%s'" %(inputURL, None), file=sys.stderr)
+                print("getDomainRealm(%s): '%s'" %(path_info, None), file=sys.stderr)
             return None
         realm = davProvider.sharePath
         if realm == "":
             realm = "/"
         return realm
+        """
 
     get_domain_realm = getDomainRealm
 
@@ -226,4 +235,9 @@ class GoogleDomainController(object):
         return bool(authToken) 
 
     auth_domain_user = authDomainUser
+    basic_auth_user = authDomainUser
+
+    def supports_http_digest_auth(self):
+        # We don't have access to a plaintext password (or stored hash)
+        return False
 

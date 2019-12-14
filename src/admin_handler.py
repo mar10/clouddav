@@ -64,15 +64,15 @@ class AdminHandler(webapp.RequestHandler):
         return 
   
 
-application = webapp.WSGIApplication([("/_admin", AdminHandler),
-#                                      ("/sign", Guestbook),
-                                      ],
-                                     debug=True)
+app = webapp.WSGIApplication([("/_admin", AdminHandler),
+#                              ("/sign", Guestbook),
+                             ],
+                             debug=True)
 
 def main():
     logging.info("admin_handler.__main__")
     logging.getLogger().setLevel(logging.DEBUG)
-    util.run_wsgi_app(application)
+    util.run_wsgi_app(app)
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,7 @@ from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 from btfs.memcache_lock_storage import LockStorageMemcache
-from wsgidav.lock_manager import LockManager, lockString
+from wsgidav.lock_manager import LockManager, lock_string
 import logging
 from btfs.btfs_dav_provider import BTFSResourceProvider
 from btfs import fs
@@ -85,7 +85,7 @@ def test():
                                         principal="martin", tokenList=[])
     assert lock["root"] == rootpath+"/folder1"
     lock = provider.lockManager.getLock(lock["token"])
-    print(lockString(lock))
+    print(lock_string(lock))
     assert lock["root"] == rootpath+"/folder1"
 
     locklist = provider.lockManager.getIndirectUrlLockList(rootpath+"/folder1/file2.txt")
