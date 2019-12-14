@@ -23,13 +23,13 @@
     </p>
     <ul>
         {% for auth_user in authorized_users %}
-        <li>'{{ auth_user.user.nickname }}' (email: {{ auth_user.user.email }}) - 
+        <li>'{{ auth_user.user.nickname() }}' (email: {{ auth_user.user.email() }}) -
 		    {% if auth_user.canWrite %}
                 <b>Read/Write access</b>
    	        {% else %}
     	        Read access
 		    {% endif %}
-            - <a href="/auth/userdelete?email={{ auth_user.user.email }}">[Delete]</a>
+            - <a href="/auth/userdelete?email={{ auth_user.user.email() }}">[Delete]</a>
         </li>
         {% endfor %}
     </ul>

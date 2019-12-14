@@ -185,28 +185,28 @@ def listdir(s):
 #===============================================================================
 # BtIO
 #===============================================================================
-class BtIO(io.StringIO):
+class BtIO(io.BytesIO):
     """
     Bigtable file IO object
     """
     def __init__(self, btfile, mode):
         self.btfile = btfile
         self.mode = mode
-        io.StringIO.__init__(self, btfile.get_content())
+        io.BytesIO.__init__(self, btfile.get_content())
         return
 
     def is_readonly(self):
         return 'w' not in self.mode
 
     def flush(self):
-        io.StringIO.flush(self)
+        io.BytesIO.flush(self)
         if not self.is_readonly():
             self.btfile.put_content(self.getvalue())
         return
 
     def close(self):
         self.flush()
-        io.StringIO.close(self)
+        io.BytesIO.close(self)
         return
 
     def __del__(self):

@@ -5,7 +5,8 @@
 
 from future import standard_library
 standard_library.install_aliases()
-import logging 
+import logging
+logging.getLogger().setLevel(logging.DEBUG)
 from wsgidav.wsgidav_app import WsgiDAVApp, DEFAULT_CONFIG
 from btfs.btfs_dav_provider import BTFSResourceProvider
 from btfs.memcache_lock_storage import LockStorageMemcache
@@ -17,6 +18,9 @@ __version__ = "0.1.0a1"
 
 def create_app():
     logging.debug("real_main")
+    #logger = logging.getLogger("wsgidav")
+    #logger.propagate = True
+    #logger.setLevel(logging.DEBUG)
     provider = BTFSResourceProvider()
     lockstorage = LockStorageMemcache()
     #domainController = GoogleDomainController()

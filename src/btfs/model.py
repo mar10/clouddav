@@ -109,15 +109,18 @@ class Path(polymodel.PolyModel):
         assert path.startswith("/")
         result = cls.cache.get(path)
         if result:
+            #logging.debug('Cached result: %s' % result)
             return result
         result = list(cls.gql("WHERE path = :1", path))
         if len(result) == 1:
             result = result[0]
 #            assert type(result) in (Path, cls)
             cls.cache.set(path, result)
+            #logging.debug('New result: %s' % result)
             return result
         elif len(result) == 0:
             # TODO: cache 'Not found' also
+            #logging.debug('No result')
             return None
         else:
             raise ValueError("The given path has more than one entities", path)
@@ -212,7 +215,8 @@ class File(Path):
             chunks = Chunk.gql("WHERE file=:1 ORDER BY offset ASC", self)
         else:
             chunks = []
-        result = ''.join(chunk.data for chunk in chunks)
+        result = b''.join(chunk.data for chunk in chunks)
+        #logging.debug('Content: %s' % repr(result))
         return result
     
     def put_content(self, s):
@@ -251,7 +255,7 @@ class File(Path):
 class Chunk(db.Model):
     file = db.ReferenceProperty(File)
     offset = db.IntegerProperty(required=True)
-    data = db.BlobProperty(default='')
+    data = db.BlobProperty(default=b'')
 
     def __len__(self):
         return len(self.data)
