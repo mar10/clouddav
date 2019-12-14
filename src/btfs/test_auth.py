@@ -5,6 +5,8 @@
 
 """
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import logging
 
 
@@ -14,18 +16,18 @@ def test_auth():
     
     
     from google.appengine.api import users
-    from google_domain_controller import xAppAuth
+    from .google_domain_controller import xAppAuth
     
 #    auth = xAppAuth("moogle@wwwendt.de", "test", "clouddav")
 #    print auth.getAuthtoken()
 
     user = users.get_current_user()
-    print user 
+    print(user) 
 
     auth = xAppAuth("moogle@wwwendt.de", "mc.martin", "clouddav-mar10")
-    print auth.getAuthtoken()
+    print(auth.getAuthtoken())
     user = users.get_current_user()
-    print user 
+    print(user) 
 
     return
 
@@ -117,7 +119,7 @@ def profile_test():
     # stats.print_callees()
     # stats.print_callers()
     logging.info("Profile data:\n%s", stream.getvalue())
-    print "*** See log for profiling info ***"
+    print("*** See log for profiling info ***")
 
 
 if __name__ == "__main__":

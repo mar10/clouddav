@@ -5,6 +5,7 @@
 Implementation of a WsgiDAV provider that implements a virtual file system based
 on Googles datastore (Bigtable). 
 """
+from __future__ import print_function
 from btfs.memcache_lock_storage import LockStorageMemcache
 from wsgidav.lock_manager import LockManager, lockString
 import logging
@@ -41,7 +42,7 @@ def test():
     fs.unlink(rootpath+"/dir1/file1.txt")
     assert not fs.isfile(rootpath+"/dir1/file1.txt")
 
-    print "*** fs tests passed ***"
+    print("*** fs tests passed ***")
   
     # Test providers 
     provider = BTFSResourceProvider()
@@ -74,7 +75,7 @@ def test():
     assert data == f.read()
     f.close()
     
-    print "*** provider tests passed ***"
+    print("*** provider tests passed ***")
     
     lock = provider.lockManager.acquire(rootpath+"/folder1", 
                                         "write", "exclusive", "infinity", 
@@ -82,14 +83,14 @@ def test():
                                         principal="martin", tokenList=[])
     assert lock["root"] == rootpath+"/folder1"
     lock = provider.lockManager.getLock(lock["token"])
-    print lockString(lock)
+    print(lockString(lock))
     assert lock["root"] == rootpath+"/folder1"
 
     locklist = provider.lockManager.getIndirectUrlLockList(rootpath+"/folder1/file2.txt")
-    print locklist
+    print(locklist)
     assert len(locklist) == 1
     
-    print "*** lock tests passed ***"
+    print("*** lock tests passed ***")
 
 
 def profile_test():
@@ -106,7 +107,7 @@ def profile_test():
     # stats.print_callees()
     # stats.print_callers()
     logging.info("Profile data:\n%s", stream.getvalue())
-    print "*** See log for profiling info ***"
+    print("*** See log for profiling info ***")
 
 
 if __name__ == "__main__":

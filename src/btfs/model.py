@@ -5,13 +5,14 @@
 # The original source for this module was taken from gaedav:
 # (c) 2009 Haoyu Bai (http://gaedav.google.com/).
 
+from __future__ import absolute_import
 import os.path
 import logging
 from google.appengine.ext import db
 from google.appengine.ext.db import polymodel
 #from google.appengine.ext.db import GqlQuery
 #from cache import cached_dir, cached_file, cached_content
-from cache import cached_resource
+from .cache import cached_resource
 #from google.appengine.api import memcache
 
 DO_EXPENSIVE_CHECKS = False

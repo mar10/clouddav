@@ -34,6 +34,7 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 
 .. _`Developers info`: http://docs.wsgidav.googlecode.com/hg/html/develop.html  
 """
+from __future__ import print_function
 import logging 
 import sys
 import urllib
@@ -76,7 +77,7 @@ class xAppAuth:
             auth_req = urllib2.Request(auth_uri, data=authreq_data)
             try:
                 auth_resp = urllib2.urlopen(auth_req)
-            except urllib2.HTTPError, e:
+            except urllib2.HTTPError as e:
                 self.lastError = (e.code, e.msg, None)
                 if e.code == 403:  
                     # '403 Forbidden': unknown user or wrong password
@@ -127,7 +128,7 @@ class GoogleDomainController(object):
         davProvider = environ["wsgidav.provider"]
         if not davProvider:
             if environ["wsgidav.verbose"] >= 2:
-                print >>sys.stderr, "getDomainRealm(%s): '%s'" %(inputURL, None)
+                print("getDomainRealm(%s): '%s'" %(inputURL, None), file=sys.stderr)
             return None
         realm = davProvider.sharePath
         if realm == "":
@@ -199,7 +200,7 @@ class GoogleDomainController(object):
         try:
             authToken = user.getAuthtoken()
             logging.debug("User %s is authorized: %s" % (username, authToken))
-        except urllib2.HTTPError, _:
+        except urllib2.HTTPError as _:
             logging.info("User %s is not authorized: %s" % (username, user.lastError))
             authToken = None
         return bool(authToken) 

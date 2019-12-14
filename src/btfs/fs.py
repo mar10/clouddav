@@ -6,11 +6,12 @@
 """
 File system operations.
 """
+from __future__ import absolute_import
 
 import time
 import StringIO
 import logging
-from model import Dir, File, Path
+from .model import Dir, File, Path
 #from btfs import memcash
 
 def initfs():

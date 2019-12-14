@@ -5,11 +5,12 @@
 Implementation of a WsgiDAV provider that implements a virtual file system based
 on Google's Big Table.
 """
+from __future__ import absolute_import
 from btfs.model import Path, Dir, File
 import logging
 import md5
 import mimetypes
-import fs
+from . import fs
 
 try:
     from cStringIO import StringIO

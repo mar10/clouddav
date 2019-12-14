@@ -20,12 +20,13 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 
 .. _`Developers info`: http://docs.wsgidav.googlecode.com/hg/html/develop.html  
 """
+from __future__ import absolute_import
 import logging
 from wsgidav import util
 from wsgidav.lock_manager import normalizeLockRoot, lockString,\
     validateLock, generateLockToken
 import time
-from cache import cached_lock
+from .cache import cached_lock
 _logger = util.getModuleLogger(__name__)
 
 __docformat__ = "reStructuredText"
@@ -176,7 +177,7 @@ class LockStorageMemcache(object):
             if len(tokenlist) == 0:
                 del lockRoots[lock["root"]]
             cached_lock.set("*", lockRoots)
-        except Exception, e:
+        except Exception as e:
             logging.warning("_deleteLock(%s): %s failed to fix root list: %s" % (token, lock, e))
         logging.info("_deleteLock(%r): %s\n\t%s" % (token, lock, lockRoots))
         # Remove the lock
