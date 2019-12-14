@@ -95,23 +95,32 @@ class xAppAuth(object):
                                   for x in auth_resp_body.split("\n") if x)
             self.authtoken = auth_resp_dict["Auth"]
         return self.authtoken
-    
+
+    get_auth_token = getAuthtoken
+
     def getAuthUrl(self, Uri, AppName):
         serv_uri = Uri
         serv_args = {}
         serv_args["continue"] = serv_uri
         serv_args["auth"] = self.getAuthtoken()
         return "http://" + AppName + ".appspot.com/_ah/login?%s" % (urllib.parse.urlencode(serv_args))
-    
+
+    get_auth_url = getAuthUrl
+
     def getAuthRequest(self, Uri, AppName):
         return urllib.request.Request(self.getAuthUrl(Uri, AppName))
-    
+
+    get_auth_request = getAuthRequest
+
     def getAuthResponse(self, Uri, AppName):
         return urllib.request.urlopen(self.getAuthRequest(Uri, AppName))
-    
+
+    get_auth_response = getAuthResponse
+
     def getAuthRead(self, Uri, AppName):
         return self.getAuthResponse(Uri, AppName).read()
 
+    get_auth_read = getAuthRead
 
 #===============================================================================
 # GoogleDomainController
@@ -137,7 +146,9 @@ class GoogleDomainController(object):
         if realm == "":
             realm = "/"
         return realm
-    
+
+    get_domain_realm = getDomainRealm
+
     def requireAuthentication(self, realmname, environ):
         """Return True if this realm requires authentication or False if it is 
         available for general access."""
@@ -148,21 +159,27 @@ class GoogleDomainController(object):
             logging.debug("Granting access to everyone (*)")
             return False
         return True
-    
+
+    require_authentication = requireAuthentication
+
     def isRealmUser(self, realmname, username, environ):
         """Returns True if this username is valid for the realm, False otherwise.
         
         Used for digest authentication.
         """
         raise NotImplementedError("We cannot query users without knowing the password for a Google account. Digest authentication must be disabled.")
-            
+
+    is_realm_user = isRealmUser
+
     def getRealmUserPassword(self, realmname, username, environ):
         """Return the password for the given username for the realm.
         
         Used for digest authentication.
         """
         raise NotImplementedError("We cannot query the password for a Google account. Digest authentication must be disabled.")
-    
+
+    _get_realm_user_password = getRealmUserPassword
+
     def authDomainUser(self, realmname, username, password, environ):
         """Returns True if this username/password pair is valid for the realm, 
         False otherwise. 
@@ -207,3 +224,6 @@ class GoogleDomainController(object):
             logging.info("User %s is not authorized: %s" % (username, user.lastError))
             authToken = None
         return bool(authToken) 
+
+    auth_domain_user = authDomainUser
+
