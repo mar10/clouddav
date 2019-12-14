@@ -201,7 +201,9 @@ class File(Path):
 
     def put(self):
         if self.is_saved():
-            self.size = sum(len(chunk) for chunk in self.chunk_set)
+            # CHECKME: this doesn't return the chunks yet
+            if self.size == 0:
+                self.size = sum(len(chunk) for chunk in self.chunk_set)
         else:
             self.size = 0
         Path.put(self)
@@ -236,6 +238,7 @@ class File(Path):
             data = s[i:i+self.ChunkSize]
             ck = Chunk(file=self, offset=i, data=data)
             ck.put()
+        self.size = size
         self.put()
         return
 
