@@ -15,12 +15,12 @@ libraries:
 
 # Custom administration console pages
 
-admin_console:
-  pages:
-  - name: CloudDAV System Info
-    url: /_admin
-  - name: CloudDAV User Administration
-    url: /auth/users
+#admin_console:
+#  pages:
+#  - name: CloudDAV System Info
+#    url: /_admin
+#  - name: CloudDAV User Administration
+#    url: /auth/users
 
 
 # Request handlers
@@ -36,6 +36,16 @@ handlers:
 - url: /auth/.*
   script: auth.app
   login: admin
+  secure: optional
+
+- url: /favicon.ico
+  static_files: static/favicon.ico
+  upload: static/favicon.ico
+  secure: optional
+
+- url: /robots.txt
+  static_files: static/robots.txt
+  upload: static/robots.txt
   secure: optional
 
 # All other URLs are handled by WsgiDAV

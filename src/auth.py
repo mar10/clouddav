@@ -95,8 +95,12 @@ class ManageAuthorizedUsers(webapp2.RequestHandler):
         user = users.User(email)
         auth_user = AuthorizedUser()
         auth_user.user = user
+        if self.request.get('write'):
+            auth_user.canWrite = True
+        else:
+            auth_user.canWrite = False
         auth_user.put()
-        self.redirect('/auth/users')
+        self.redirect('/auth/users?updated')
 
 
 class DeleteAuthorizedUser(webapp2.RequestHandler):
@@ -107,7 +111,7 @@ class DeleteAuthorizedUser(webapp2.RequestHandler):
         user = users.User(email)
         auth_user = AuthorizedUser.gql("where user = :1", user).get()
         auth_user.delete()
-        self.redirect('/auth/users')
+        self.redirect('/auth/users?deleted')
 
 
 app = webapp2.WSGIApplication([('/auth/users', ManageAuthorizedUsers),
