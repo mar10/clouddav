@@ -4,11 +4,10 @@ Taken from
 """
 import os
 
+import webapp2
+import jinja2
 from google.appengine.ext import db
 from google.appengine.api import users
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp.util import run_wsgi_app
 import logging
 
 class AuthorizedUser(db.Model):
@@ -25,7 +24,14 @@ def findAuthUser(email):
     return auth_user
     
 
-class AuthorizedRequestHandler(webapp.RequestHandler):
+JINJA_ENV = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(
+        os.path.join(os.path.dirname(__file__), 'templates')),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
+
+class AuthorizedRequestHandler(webapp2.RequestHandler):
     """Authenticate users against a stored list of authorized users.
 
     Base your request handler on this class and check the authorize() method
@@ -66,7 +72,7 @@ class AuthorizedRequestHandler(webapp.RequestHandler):
             </html>""" % users.create_logout_url(self.request.uri))
 
 
-class ManageAuthorizedUsers(webapp.RequestHandler):
+class ManageAuthorizedUsers(webapp2.RequestHandler):
     """Manage list of authorized users through web page.
 
     The GET method shows page with current list of users and allows
@@ -81,19 +87,23 @@ class ManageAuthorizedUsers(webapp.RequestHandler):
         template_values = {
             'authorized_users': AuthorizedUser.all()
             }
-        path = os.path.join(os.path.dirname(__file__), self.template_file)
-        self.response.out.write(template.render(path, template_values))
+        template = JINJA_ENV.get_template(self.template_file)
+        self.response.out.write(template.render(template_values))
 
     def post(self):
         email = self.request.get('email')
         user = users.User(email)
         auth_user = AuthorizedUser()
         auth_user.user = user
+        if self.request.get('write'):
+            auth_user.canWrite = True
+        else:
+            auth_user.canWrite = False
         auth_user.put()
-        self.redirect('/auth/users')
+        self.redirect('/auth/users?updated')
 
 
-class DeleteAuthorizedUser(webapp.RequestHandler):
+class DeleteAuthorizedUser(webapp2.RequestHandler):
     """Delete an authorized user from the datastore."""
     def get(self):
         email = self.request.get('email')
@@ -101,16 +111,17 @@ class DeleteAuthorizedUser(webapp.RequestHandler):
         user = users.User(email)
         auth_user = AuthorizedUser.gql("where user = :1", user).get()
         auth_user.delete()
-        self.redirect('/auth/users')
+        self.redirect('/auth/users?deleted')
 
 
-application = webapp.WSGIApplication([('/auth/users', ManageAuthorizedUsers),
-                                      ('/auth/useradd', ManageAuthorizedUsers),
-                                      ('/auth/userdelete', DeleteAuthorizedUser)],
-                                     debug=True)
+app = webapp2.WSGIApplication([('/auth/users', ManageAuthorizedUsers),
+                               ('/auth/useradd', ManageAuthorizedUsers),
+                               ('/auth/userdelete', DeleteAuthorizedUser)],
+                              debug=True)
 
 def main():
-    run_wsgi_app(application)
+    from google.appengine.ext.webapp.util import run_wsgi_app
+    run_wsgi_app(app)
 
 if __name__ == "__main__":
     main()

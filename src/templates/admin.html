@@ -1,0 +1,31 @@
+<html>
+	<head>
+        <title>CloudDAV Administration</title>
+	</head>
+	<body>
+	<h1>CloudDAV Administration</h1>
+	Hello {{ nickname }}.
+	<ul>
+		<li><a href="?run_tests">Run tests</a></li>
+	    <li><a href="?clear_cache">Clear cache</a> (also clears all locks!)</li>
+	    <li>THIS WILL IMMEDIATELY REMOVE ALL DRIVE CONTENTS: <a href="?clear_datastore">Clear datastore</a></li>
+		<li><a href="?check_orphans">Check orphans</a></li>
+    </ul>
+	<a href="{{ url }}">{{ url_linktext }}</a>
+	<hr />
+	Memcache stats:
+	<pre>{{ memcache_stats }}</pre>
+	<hr />
+	Datastore stats:
+	<pre>{{ datastore_stats }}</pre>
+	<hr />
+	Path samples:
+	<pre>{{ path_samples }}</pre>
+	<hr />
+	Chunk samples:
+	<pre>{{ chunk_samples }}</pre>
+    <hr />
+    Environment:
+    <pre>{{ environment_dump }}</pre>
+	</body>
+</html>

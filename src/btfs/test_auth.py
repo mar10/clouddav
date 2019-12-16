@@ -5,6 +5,10 @@
 
 """
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 import logging
 
 
@@ -14,18 +18,18 @@ def test_auth():
     
     
     from google.appengine.api import users
-    from google_domain_controller import xAppAuth
+    from .google_domain_controller import xAppAuth
     
 #    auth = xAppAuth("moogle@wwwendt.de", "test", "clouddav")
 #    print auth.getAuthtoken()
 
     user = users.get_current_user()
-    print user 
+    print(user) 
 
     auth = xAppAuth("moogle@wwwendt.de", "mc.martin", "clouddav-mar10")
-    print auth.getAuthtoken()
+    print(auth.getAuthtoken())
     user = users.get_current_user()
-    print user 
+    print(user) 
 
     return
 
@@ -105,10 +109,10 @@ def test_auth():
     
 def profile_test():
     # This is the main function for profiling 
-    import cProfile, pstats, StringIO
+    import cProfile, pstats, io
     prof = cProfile.Profile()
     prof = prof.runctx("test_auth()", globals(), locals())
-    stream = StringIO.StringIO()
+    stream = io.StringIO()
     stats = pstats.Stats(prof, stream=stream)
 #    stats.sort_stats("time")  # Or cumulative
     stats.sort_stats("cumulative")  # Or time
@@ -117,7 +121,7 @@ def profile_test():
     # stats.print_callees()
     # stats.print_callers()
     logging.info("Profile data:\n%s", stream.getvalue())
-    print "*** See log for profiling info ***"
+    print("*** See log for profiling info ***")
 
 
 if __name__ == "__main__":

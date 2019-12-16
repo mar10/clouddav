@@ -20,13 +20,15 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 
 .. _`Developers info`: http://docs.wsgidav.googlecode.com/hg/html/develop.html  
 """
+from __future__ import absolute_import
+from builtins import object
 import logging
 from wsgidav import util
-from wsgidav.lock_manager import normalizeLockRoot, lockString,\
-    validateLock, generateLockToken
+from wsgidav.lock_manager import normalize_lock_root, lock_string,\
+    validate_lock, generate_lock_token
 import time
-from cache import cached_lock
-_logger = util.getModuleLogger(__name__)
+from .cache import cached_lock
+_logger = util.get_module_logger(__name__)
 
 __docformat__ = "reStructuredText"
 
@@ -94,7 +96,7 @@ class LockStorageMemcache(object):
             return None
         expire = float(lock["expire"])
         if expire >= 0 and expire < time.time():
-            _logger.debug("Lock timed-out(%s): %s" % (expire, lockString(lock)))
+            _logger.debug("Lock timed-out(%s): %s" % (expire, lock_string(lock)))
             self._deleteLock(lock)      
             return None
         return lock
@@ -112,7 +114,7 @@ class LockStorageMemcache(object):
 
         # Normalize root: /foo/bar 
         org_path = path
-        path = normalizeLockRoot(path)
+        path = normalize_lock_root(path)
         lock["root"] = path
 
         # Normalize timeout from ttl to expire-date
@@ -125,9 +127,9 @@ class LockStorageMemcache(object):
         lock["timeout"] = timeout
         lock["expire"] = time.time() + timeout
         
-        validateLock(lock)
+        validate_lock(lock)
         
-        token = generateLockToken()
+        token = generate_lock_token()
         lock["token"] = token
         
         # Append this lock root to current path list
@@ -176,7 +178,7 @@ class LockStorageMemcache(object):
             if len(tokenlist) == 0:
                 del lockRoots[lock["root"]]
             cached_lock.set("*", lockRoots)
-        except Exception, e:
+        except Exception as e:
             logging.warning("_deleteLock(%s): %s failed to fix root list: %s" % (token, lock, e))
         logging.info("_deleteLock(%r): %s\n\t%s" % (token, lock, lockRoots))
         # Remove the lock
@@ -190,22 +192,22 @@ class LockStorageMemcache(object):
         See wsgidav.lock_storage.LockStorageDict.delete()
         """
         lock = self.get(token)
-        logging.debug("delete %s" % lockString(lock))
+        logging.debug("delete %s" % lock_string(lock))
         return self._deleteLock(lock)
     
     
-    def getLockList(self, path, includeRoot, includeChildren, tokenOnly):
+    def getLockList(self, path, include_root, include_children, token_only):
         """Return a list of direct locks for <path>.
 
         See wsgidav.lock_storage.LockStorageDict.getLockList()
         """
-        path = normalizeLockRoot(path)
+        path = normalize_lock_root(path)
         lockRoots = cached_lock.get("*")
         if not lockRoots:
             return []
 
         def __appendLocks(toklist):
-            if tokenOnly:
+            if token_only:
                 lockList.extend(toklist)
             else:
                 for token in toklist:
@@ -215,12 +217,15 @@ class LockStorageMemcache(object):
 
         lockList = []
 
-        if includeRoot and path in lockRoots:
+        if include_root and path in lockRoots:
             __appendLocks(lockRoots[path])
                 
-        if includeChildren:
-            for root, toks in lockRoots.items():
-                if util.isChildUri(path, root): 
+        if include_children:
+            for root, toks in list(lockRoots.items()):
+                if util.is_child_uri(path, root):
                     __appendLocks(toks)
         
         return lockList
+
+    get_lock_list = getLockList
+

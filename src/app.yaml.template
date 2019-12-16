@@ -1,20 +1,26 @@
 # TODO: rename this file to 'app.yaml'
 #       enter a Google App Engine application instance for MY_APP_NAME
 
-application: MY_APP_NAME
-version: 1
-runtime: python
+#application: MY_APP_NAME
+#version: 1
+runtime: python27
 api_version: 1
+threadsafe: true
 
+libraries:
+- name: webapp2
+  version: "2.5.2"
+- name: jinja2
+  version: "2.6"
 
 # Custom administration console pages
 
-admin_console:
-  pages:
-  - name: CloudDAV System Info
-    url: /_admin
-  - name: CloudDAV User Administration
-    url: /auth/users
+#admin_console:
+#  pages:
+#  - name: CloudDAV System Info
+#    url: /_admin
+#  - name: CloudDAV User Administration
+#    url: /auth/users
 
 
 # Request handlers
@@ -22,14 +28,24 @@ admin_console:
 handlers:
 # Display Admin page at /_admin
 - url: /_admin
-  script: admin_handler.py
+  script: admin_handler.app
   login: admin
   secure: optional
 
 # User administration
 - url: /auth/.*
-  script: auth.py
+  script: auth.app
   login: admin
+  secure: optional
+
+- url: /favicon.ico
+  static_files: static/favicon.ico
+  upload: static/favicon.ico
+  secure: optional
+
+- url: /robots.txt
+  static_files: static/robots.txt
+  upload: static/robots.txt
   secure: optional
 
 # All other URLs are handled by WsgiDAV
@@ -38,6 +54,6 @@ handlers:
 #     Windows XP (SP3) Mini-Redirector does not accept 'http://' URLs but follows 
 #     this redirections.
 - url: .*
-  script: clouddav.py
+  script: clouddav.app
   secure: always
-  
+

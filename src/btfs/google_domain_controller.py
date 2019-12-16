@@ -34,21 +34,25 @@ See `Developers info`_ for more information about the WsgiDAV architecture.
 
 .. _`Developers info`: http://docs.wsgidav.googlecode.com/hg/html/develop.html  
 """
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import logging 
 import sys
-import urllib
-import urllib2
-import cookielib
+import urllib.request, urllib.error, urllib.parse
+import http.cookiejar
 
 from google.appengine.api import users 
 from auth import AuthorizedUser, findAuthUser
+from wsgidav.dc.base_dc import BaseDomainController
 __docformat__ = "reStructuredText"
 
 
 #===============================================================================
 # xAppAuth
 #===============================================================================
-class xAppAuth:
+class xAppAuth(object):
     """
     Author: Dale Lane; Modified by 'youngfe' on this page:
     http://dalelane.co.uk/blog/?p=303
@@ -64,19 +68,19 @@ class xAppAuth:
     def getAuthtoken(self, refresh=False):
         if self.authtoken is None or refresh:
             self.lastError = (None, None, None)
-            cookiejar = cookielib.LWPCookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-            urllib2.install_opener(opener)
+            cookiejar = http.cookiejar.LWPCookieJar()
+            opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookiejar))
+            urllib.request.install_opener(opener)
             auth_uri = "https://www.google.com/accounts/ClientLogin"
-            authreq_data = urllib.urlencode({"Email": self.user,
+            authreq_data = urllib.parse.urlencode({"Email": self.user,
                 "Passwd": self.password,
                 "service": "ah",
                 "source": self.appName,
                 "accountType": "HOSTED_OR_GOOGLE" })
-            auth_req = urllib2.Request(auth_uri, data=authreq_data)
+            auth_req = urllib.request.Request(auth_uri, data=authreq_data)
             try:
-                auth_resp = urllib2.urlopen(auth_req)
-            except urllib2.HTTPError, e:
+                auth_resp = urllib.request.urlopen(auth_req)
+            except urllib.error.HTTPError as e:
                 self.lastError = (e.code, e.msg, None)
                 if e.code == 403:  
                     # '403 Forbidden': unknown user or wrong password
@@ -91,49 +95,69 @@ class xAppAuth:
                                   for x in auth_resp_body.split("\n") if x)
             self.authtoken = auth_resp_dict["Auth"]
         return self.authtoken
-    
+
+    get_auth_token = getAuthtoken
+
     def getAuthUrl(self, Uri, AppName):
         serv_uri = Uri
         serv_args = {}
         serv_args["continue"] = serv_uri
         serv_args["auth"] = self.getAuthtoken()
-        return "http://" + AppName + ".appspot.com/_ah/login?%s" % (urllib.urlencode(serv_args))
-    
+        return "http://" + AppName + ".appspot.com/_ah/login?%s" % (urllib.parse.urlencode(serv_args))
+
+    get_auth_url = getAuthUrl
+
     def getAuthRequest(self, Uri, AppName):
-        return urllib2.Request(self.getAuthUrl(Uri, AppName))
-    
+        return urllib.request.Request(self.getAuthUrl(Uri, AppName))
+
+    get_auth_request = getAuthRequest
+
     def getAuthResponse(self, Uri, AppName):
-        return urllib2.urlopen(self.getAuthRequest(Uri, AppName))
-    
+        return urllib.request.urlopen(self.getAuthRequest(Uri, AppName))
+
+    get_auth_response = getAuthResponse
+
     def getAuthRead(self, Uri, AppName):
         return self.getAuthResponse(Uri, AppName).read()
 
+    get_auth_read = getAuthRead
 
 #===============================================================================
 # GoogleDomainController
 #===============================================================================
-class GoogleDomainController(object):
+class GoogleDomainController(BaseDomainController):
 
-    def __init__(self, userMap=None):
+    #def __init__(self, userMap=None):
+    def __init__(self, wsgidav_app, config):
+        super(GoogleDomainController, self).__init__(wsgidav_app, config)
+        dc_conf = config.get("google_dc", {})
 #        self.appName = appName
-        self.userMap = userMap
+#        self.userMap = userMap
 
     def __repr__(self):
         return self.__class__.__name__
 
-    def getDomainRealm(self, inputURL, environ):
+    def getDomainRealm(self, path_info, environ):
         """Resolve a relative url to the  appropriate realm name."""
         # we don't get the realm here, its already been resolved in request_resolver
+        realm = self._calc_realm_from_path_provider(path_info, environ)
+        return realm
+        """
+        if environ is None:
+            return "/"
         davProvider = environ["wsgidav.provider"]
         if not davProvider:
             if environ["wsgidav.verbose"] >= 2:
-                print >>sys.stderr, "getDomainRealm(%s): '%s'" %(inputURL, None)
+                print("getDomainRealm(%s): '%s'" %(path_info, None), file=sys.stderr)
             return None
         realm = davProvider.sharePath
         if realm == "":
             realm = "/"
         return realm
-    
+        """
+
+    get_domain_realm = getDomainRealm
+
     def requireAuthentication(self, realmname, environ):
         """Return True if this realm requires authentication or False if it is 
         available for general access."""
@@ -144,21 +168,27 @@ class GoogleDomainController(object):
             logging.debug("Granting access to everyone (*)")
             return False
         return True
-    
+
+    require_authentication = requireAuthentication
+
     def isRealmUser(self, realmname, username, environ):
         """Returns True if this username is valid for the realm, False otherwise.
         
         Used for digest authentication.
         """
         raise NotImplementedError("We cannot query users without knowing the password for a Google account. Digest authentication must be disabled.")
-            
+
+    is_realm_user = isRealmUser
+
     def getRealmUserPassword(self, realmname, username, environ):
         """Return the password for the given username for the realm.
         
         Used for digest authentication.
         """
         raise NotImplementedError("We cannot query the password for a Google account. Digest authentication must be disabled.")
-    
+
+    _get_realm_user_password = getRealmUserPassword
+
     def authDomainUser(self, realmname, username, password, environ):
         """Returns True if this username/password pair is valid for the realm, 
         False otherwise. 
@@ -199,7 +229,15 @@ class GoogleDomainController(object):
         try:
             authToken = user.getAuthtoken()
             logging.debug("User %s is authorized: %s" % (username, authToken))
-        except urllib2.HTTPError, _:
+        except urllib.error.HTTPError as _:
             logging.info("User %s is not authorized: %s" % (username, user.lastError))
             authToken = None
         return bool(authToken) 
+
+    auth_domain_user = authDomainUser
+    basic_auth_user = authDomainUser
+
+    def supports_http_digest_auth(self):
+        # We don't have access to a plaintext password (or stored hash)
+        return False
+
